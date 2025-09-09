@@ -22,22 +22,36 @@ body{font-family:system-ui, sans-serif;margin:0;padding:0;background:#f5f5f5;col
 .qty button{background:transparent;border:none;padding:4px 8px;cursor:pointer}
 .qty input{width:40px;border:none;text-align:center}
 .total{font-size:18px;font-weight:800}
+.hidden{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>先生ミニショップ</h1>
+
+
+<!-- 商品選択画面 -->
+<div id="catalogScreen">
+<h2>商品を選ぶ</h2>
 <div class="grid" id="catalog"></div>
+<button class="btn" id="goCart">カートを見る</button>
+</div>
 
 
-<aside class="side">
-<h2>カート</h2>
+<!-- 注文確認画面 -->
+<div id="cartScreen" class="hidden">
+<h2>注文確認</h2>
+<div class="side">
 <div id="cartList"></div>
 <div class="row"><span>小計:</span><span id="subtotal">¥0</span></div>
 <div class="row"><span>税込:</span><span id="tax">¥0</span></div>
 <div class="row total"><span>合計:</span><span id="total">¥0</span></div>
+<div class="row">
 <button class="btn" id="checkout">注文する</button>
-</aside>
+<button class="btn" style="background:#555" id="backCatalog">商品に戻る</button>
+</div>
+</div>
+</div>
 </div>
 
 
@@ -83,7 +97,4 @@ function renderCart(){
 const list=cartItems();
 const area=$('#cartList');
 if(list.length===0){ area.innerHTML='<p>カートは空です</p>'; }
-else {
-area.innerHTML=list.map(i=>`
-<div class="line">
-<div class="img" style="width:32px;height:32px">${i.emoji}</div>
+</html>
