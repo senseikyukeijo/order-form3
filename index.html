@@ -1,146 +1,125 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>先生向けミニショップ（LIFF）</title>
-  <meta name="color-scheme" content="light dark" />
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <meta charset="UTF-8">
+  <title>先生ミニショップ</title>
   <style>
-    body{font-family:system-ui, sans-serif;margin:0;padding:0;background:#f5f5f5;color:#333}
-    .wrap{max-width:900px;margin:0 auto;padding:20px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-    .card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:14px;box-shadow:0 2px 4px rgba(0,0,0,0.08)}
-    .card .img{width:64px;height:64px;border-radius:10px;display:grid;place-items:center;font-size:32px;background:#f0f0f0;margin-bottom:8px}
-    .title{font-weight:700;margin:0 0 6px 0}
-    .price{font-weight:700;color:#0070f3}
-    .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}
-    .btn{background:#0070f3;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-weight:600;cursor:pointer}
-    .side{background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px;margin-top:20px}
-    .line{display:flex;gap:10px;align-items:center;margin-bottom:10px}
-    .qty{display:flex;align-items:center;border:1px solid #ccc;border-radius:6px}
-    .qty button{background:transparent;border:none;padding:4px 8px;cursor:pointer}
-    .qty input{width:40px;border:none;text-align:center}
-    .total{font-size:18px;font-weight:800}
-    .hidden{display:none}
-    select{padding:4px;border-radius:6px;border:1px solid #ccc}
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .product { border: 1px solid #ccc; padding: 10px; margin: 10px; border-radius: 8px; }
+    .hidden { display: none; }
+    input[type='number'] { width: 60px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>先生ミニショップ</h1>
+  <h1>先生ミニショップ</h1>
 
-    <!-- 商品選択画面 -->
-    <div id="catalogScreen">
-      <h2>商品を選ぶ</h2>
-      <div class="grid" id="catalog"></div>
-      <button class="btn" id="goCart">カートを見る</button>
+  <!-- 商品選択画面 -->
+  <div id="catalogScreen">
+    <h2>商品一覧</h2>
+    <div class="product">
+      赤ペン 🖊️ - 300円 <br>
+      数量: <input type="number" id="qtyRedPen" min="1" value="1"> 
+      <button onclick="addToCart('赤ペン', 300, document.getElementById('qtyRedPen').value)">カートに追加</button>
     </div>
+    <div class="product">
+      黒ボールペン ✒️ - 280円 <br>
+      数量: <input type="number" id="qtyBlackPen" min="1" value="1"> 
+      <button onclick="addToCart('黒ボールペン', 280, document.getElementById('qtyBlackPen').value)">カートに追加</button>
+    </div>
+    <div class="product">
+      青ボールペン ✒️ - 280円 <br>
+      数量: <input type="number" id="qtyBluePen" min="1" value="1"> 
+      <button onclick="addToCart('青ボールペン', 280, document.getElementById('qtyBluePen').value)">カートに追加</button>
+    </div>
+    <div class="product">
+      コーヒー ☕ - 150円 <br>
+      数量: <input type="number" id="qtyCoffee" min="1" value="1"> 
+      <button onclick="addToCart('コーヒー', 150, document.getElementById('qtyCoffee').value)">カートに追加</button>
+    </div>
+    <div class="product">
+      水 💧 - 100円 <br>
+      数量: <input type="number" id="qtyWater" min="1" value="1"> 
+      <button onclick="addToCart('水', 100, document.getElementById('qtyWater').value)">カートに追加</button>
+    </div>
+    <button onclick="showCart()">カートを見る</button>
+  </div>
 
-    <!-- 注文確認画面 -->
-    <div id="cartScreen" class="hidden">
-      <h2>注文確認</h2>
-      <div class="side">
-        <div id="cartList"></div>
-        <div class="row"><span>小計:</span><span id="subtotal">¥0</span></div>
-        <div class="row"><span>税込:</span><span id="tax">¥0</span></div>
-        <div class="row total"><span>合計:</span><span id="total">¥0</span></div>
-        <div class="row">
-          <button class="btn" id="checkout">注文する</button>
-          <button class="btn" style="background:#555" id="backCatalog">商品に戻る</button>
-        </div>
-      </div>
-    </div>
+  <!-- 注文確認画面 -->
+  <div id="cartScreen" class="hidden">
+    <h2>注文確認</h2>
+    <div id="cart"></div>
+    <p id="total"></p>
+    <button onclick="submitOrder()">注文する</button>
+    <button onclick="showCatalog()">商品に戻る</button>
   </div>
 
   <script>
-    const LIFF_ID = "YOUR_LIFF_ID_HERE";
-    const ORDER_WEBHOOK_URL = "https://example.com/your-webhook";
-    const TAX_RATE = 0.10;
+    let cart = [];
 
-    const PRODUCTS = [
-      {id:"P01", name:"赤ペン 0.5mm（3本）", price:300, unit:"セット", emoji:"🖊️"},
-      {id:"P02", name:"黒ボールペン 1.0mm（3本）", price:280, unit:"セット", emoji:"✒️"},
-      {id:"P03", name:"青ボールペン 0.7mm（2本）", price:200, unit:"セット", emoji:"🖋️"},
-      {id:"P04", name:"ドリップコーヒー（5パック）", price:420, unit:"箱", emoji:"☕"},
-      {id:"P05", name:"ミネラルウォーター（500ml）", price:120, unit:"本", emoji:"💧"}
-    ];
-
-    const $ = (s)=>document.querySelector(s);
-    const state = { cart: {} };
-
-    function save(){ renderCart(); }
-    function money(n){ return "¥"+n.toLocaleString("ja-JP"); }
-    function addToCart(id,qty){
-      const q = parseInt(qty||1);
-      state.cart[id] = (state.cart[id]||0)+q;
-      save();
-      alert(`${q}個をカートに追加しました`);
-    }
-    function setQty(id,q){ const n=Math.max(0,parseInt(q||0)); if(n===0) delete state.cart[id]; else state.cart[id]=n; save(); }
-    function cartItems(){ return Object.entries(state.cart).map(([id,qty])=>{ const p=PRODUCTS.find(x=>x.id===id); return {...p, qty}; }); }
-    function totals(){ const sub=cartItems().reduce((a,b)=>a+b.price*b.qty,0); const tax=Math.round(sub*TAX_RATE); return {sub,tax,total:sub+tax}; }
-
-    function renderCatalog(){
-      $('#catalog').innerHTML = PRODUCTS.map(p=>{
-        const options = Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
-        return `
-        <div class="card">
-          <div class="img">${p.emoji}</div>
-          <p class="title">${p.name}</p>
-          <p class="price">${money(p.price)}</p>
-          <div class="row">
-            <label>数量:</label>
-            <select id="qty_${p.id}">${options}</select>
-          </div>
-          <button class="btn" onclick="addToCart('${p.id}', document.getElementById('qty_${p.id}').value)">カートに追加</button>
-        </div>`;
-      }).join('');
-    }
-
-    function renderCart(){
-      const list=cartItems();
-      const area=$('#cartList');
-      if(list.length===0){ area.innerHTML='<p>カートは空です</p>'; }
-      else {
-        area.innerHTML=list.map(i=>`
-          <div class="line">
-            <div class="img" style="width:32px;height:32px">${i.emoji}</div>
-            <div style="flex:1">
-              <strong>${i.name}</strong><br>
-              ${money(i.price)} ×
-              <div class="qty">
-                <button onclick="setQty('${i.id}', (state.cart['${i.id}']||0)-1)">－</button>
-                <input value="${i.qty}" oninput="setQty('${i.id}',this.value)">
-                <button onclick="setQty('${i.id}', (state.cart['${i.id}']||0)+1)">＋</button>
-              </div>
-            </div>
-          </div>`).join('');
+    function addToCart(name, price, qty) {
+      qty = parseInt(qty);
+      if (isNaN(qty) || qty <= 0) return;
+      let item = cart.find(p => p.name === name);
+      if (item) {
+        item.qty += qty;
+      } else {
+        cart.push({name, price, qty});
       }
-      const t=totals();
-      $('#subtotal').textContent=money(t.sub);
-      $('#tax').textContent=money(t.tax);
-      $('#total').textContent=money(t.total);
+      alert(name + 'を' + qty + '個カートに追加しました');
     }
 
-    async function submitOrder(){
-      const items=cartItems(); if(items.length===0){alert('カートが空です'); return;}
-      const t=totals();
-      const order={timestamp:new Date().toISOString(),items,subtotal:t.sub,tax:t.tax,total:t.total};
-      try{ await fetch(ORDER_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)}); alert('注文を受け付けました'); state.cart={}; save(); showCatalog(); }
-      catch(e){ alert('注文送信に失敗しました'); }
+    function showCart() {
+      document.getElementById('catalogScreen').classList.add('hidden');
+      document.getElementById('cartScreen').classList.remove('hidden');
+      renderCart();
     }
 
-    function showCatalog(){ $('#catalogScreen').classList.remove('hidden'); $('#cartScreen').classList.add('hidden'); }
-    function showCart(){ renderCart(); $('#catalogScreen').classList.add('hidden'); $('#cartScreen').classList.remove('hidden'); }
+    function showCatalog() {
+      document.getElementById('cartScreen').classList.add('hidden');
+      document.getElementById('catalogScreen').classList.remove('hidden');
+    }
 
-    document.addEventListener('DOMContentLoaded',()=>{
-      renderCatalog(); renderCart();
-      $('#checkout').addEventListener('click', submitOrder);
-      $('#goCart').addEventListener('click', showCart);
-      $('#backCatalog').addEventListener('click', showCatalog);
-    });
+    function renderCart() {
+      let cartDiv = document.getElementById('cart');
+      cartDiv.innerHTML = '';
+      let total = 0;
+      cart.forEach((item, index) => {
+        let subtotal = item.price * item.qty;
+        total += subtotal;
+        cartDiv.innerHTML += `
+          <div>
+            ${item.name} - ${item.price}円 
+            数量: <input type="number" min="0" value="${item.qty}" onchange="updateQty(${index}, this.value)"> 
+            小計: ${subtotal}円
+          </div>`;
+      });
+      document.getElementById('total').innerText = '合計: ' + total + '円';
+    }
+
+    function updateQty(index, newQty) {
+      newQty = parseInt(newQty);
+      if (isNaN(newQty) || newQty < 0) return;
+      if (newQty === 0) {
+        cart.splice(index, 1);
+      } else {
+        cart[index].qty = newQty;
+      }
+      renderCart();
+    }
+
+    function submitOrder() {
+      if (cart.length === 0) {
+        alert('カートが空です');
+        return;
+      }
+      let orderText = '注文内容:\n';
+      cart.forEach(item => {
+        orderText += `${item.name} x ${item.qty}\n`;
+      });
+      alert(orderText + '\n注文を送信しました！');
+      cart = [];
+      showCatalog();
+    }
   </script>
 </body>
 </html>
-
