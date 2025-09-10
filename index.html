@@ -5,9 +5,10 @@
   <title>先生ミニショップ</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    .product { border: 1px solid #ccc; padding: 10px; margin: 10px; border-radius: 8px; }
+    .product { border: 1px solid #ccc; padding: 10px; margin: 10px; border-radius: 8px; width: 200px; text-align: center; display: inline-block; vertical-align: top; }
     .hidden { display: none; }
     input[type='number'] { width: 60px; }
+    img { width: 80px; height: 80px; display: block; margin: auto; }
   </style>
 </head>
 <body>
@@ -16,31 +17,7 @@
   <!-- 商品選択画面 -->
   <div id="catalogScreen">
     <h2>商品一覧</h2>
-    <div class="product">
-      赤ペン 🖊️ - 300円 <br>
-      数量: <input type="number" id="qtyRedPen" min="1" value="1"> 
-      <button onclick="addToCart('赤ペン', 300, document.getElementById('qtyRedPen').value)">カートに追加</button>
-    </div>
-    <div class="product">
-      黒ボールペン ✒️ - 280円 <br>
-      数量: <input type="number" id="qtyBlackPen" min="1" value="1"> 
-      <button onclick="addToCart('黒ボールペン', 280, document.getElementById('qtyBlackPen').value)">カートに追加</button>
-    </div>
-    <div class="product">
-      青ボールペン ✒️ - 280円 <br>
-      数量: <input type="number" id="qtyBluePen" min="1" value="1"> 
-      <button onclick="addToCart('青ボールペン', 280, document.getElementById('qtyBluePen').value)">カートに追加</button>
-    </div>
-    <div class="product">
-      コーヒー ☕ - 150円 <br>
-      数量: <input type="number" id="qtyCoffee" min="1" value="1"> 
-      <button onclick="addToCart('コーヒー', 150, document.getElementById('qtyCoffee').value)">カートに追加</button>
-    </div>
-    <div class="product">
-      水 💧 - 100円 <br>
-      数量: <input type="number" id="qtyWater" min="1" value="1"> 
-      <button onclick="addToCart('水', 100, document.getElementById('qtyWater').value)">カートに追加</button>
-    </div>
+    <div id="productList"></div>
     <button onclick="showCart()">カートを見る</button>
   </div>
 
@@ -54,7 +31,30 @@
   </div>
 
   <script>
+    const products = [
+      { name: '赤ペン', price: 300, icon: '🖊️' },
+      { name: '黒ボールペン', price: 280, icon: '✒️' },
+      { name: '青ボールペン', price: 280, icon: '🖋️' },
+      { name: 'コーヒー', price: 150, icon: '☕' },
+      { name: '水', price: 100, icon: '💧' }
+    ];
+
     let cart = [];
+
+    function renderProducts() {
+      const list = document.getElementById('productList');
+      list.innerHTML = '';
+      products.forEach((p, idx) => {
+        list.innerHTML += `
+          <div class="product">
+            <div style="font-size:40px;">${p.icon}</div>
+            <strong>${p.name}</strong><br>
+            ${p.price}円<br>
+            数量: <input type="number" id="qty${idx}" min="1" value="1"><br>
+            <button onclick="addToCart('${p.name}', ${p.price}, document.getElementById('qty${idx}').value)">カートに追加</button>
+          </div>`;
+      });
+    }
 
     function addToCart(name, price, qty) {
       qty = parseInt(qty);
@@ -120,6 +120,8 @@
       cart = [];
       showCatalog();
     }
+
+    renderProducts();
   </script>
 </body>
 </html>
