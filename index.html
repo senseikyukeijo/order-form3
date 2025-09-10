@@ -5,10 +5,13 @@
   <title>先生ミニショップ</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    .product { border: 1px solid #ccc; padding: 10px; margin: 10px; border-radius: 8px; width: 200px; text-align: center; display: inline-block; vertical-align: top; }
+    h1, h2 { text-align: center; }
+    .product-list { display: flex; flex-wrap: wrap; justify-content: center; }
+    .product { border: 1px solid #ccc; padding: 15px; margin: 10px; border-radius: 8px; width: 200px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
     .hidden { display: none; }
-    input[type='number'] { width: 60px; }
-    img { width: 80px; height: 80px; display: block; margin: auto; }
+    input[type='number'] { width: 60px; text-align: center; }
+    button { margin-top: 8px; padding: 5px 10px; border-radius: 5px; border: none; background-color: #4CAF50; color: white; cursor: pointer; }
+    button:hover { background-color: #45a049; }
   </style>
 </head>
 <body>
@@ -17,11 +20,13 @@
   <!-- 商品選択画面 -->
   <div id="catalogScreen">
     <h2>商品一覧</h2>
-    <div id="productList"></div>
-    <button onclick="showCart()">カートを見る</button>
+    <div class="product-list" id="productList"></div>
+    <div style="text-align:center;">
+      <button onclick="showCart()">カートを見る</button>
+    </div>
   </div>
 
-  <!-- 注文確認画面 -->
+  <!-- カート画面 -->
   <div id="cartScreen" class="hidden">
     <h2>注文確認</h2>
     <div id="cart"></div>
@@ -31,6 +36,7 @@
   </div>
 
   <script>
+    // 商品データ
     const products = [
       { name: '赤ペン', price: 300, icon: '🖊️' },
       { name: '黒ボールペン', price: 280, icon: '✒️' },
@@ -41,6 +47,7 @@
 
     let cart = [];
 
+    // 商品一覧を表示
     function renderProducts() {
       const list = document.getElementById('productList');
       list.innerHTML = '';
@@ -56,6 +63,7 @@
       });
     }
 
+    // カートに追加
     function addToCart(name, price, qty) {
       qty = parseInt(qty);
       if (isNaN(qty) || qty <= 0) return;
@@ -65,20 +73,23 @@
       } else {
         cart.push({name, price, qty});
       }
-      alert(name + 'を' + qty + '個カートに追加しました');
+      alert(`${name}を${qty}個カートに追加しました`);
     }
 
+    // カート画面を表示
     function showCart() {
       document.getElementById('catalogScreen').classList.add('hidden');
       document.getElementById('cartScreen').classList.remove('hidden');
       renderCart();
     }
 
+    // 商品画面を表示
     function showCatalog() {
       document.getElementById('cartScreen').classList.add('hidden');
       document.getElementById('catalogScreen').classList.remove('hidden');
     }
 
+    // カート内容を描画
     function renderCart() {
       let cartDiv = document.getElementById('cart');
       cartDiv.innerHTML = '';
@@ -96,6 +107,7 @@
       document.getElementById('total').innerText = '合計: ' + total + '円';
     }
 
+    // 数量更新
     function updateQty(index, newQty) {
       newQty = parseInt(newQty);
       if (isNaN(newQty) || newQty < 0) return;
@@ -107,6 +119,7 @@
       renderCart();
     }
 
+    // 注文送信（ダミー処理）
     function submitOrder() {
       if (cart.length === 0) {
         alert('カートが空です');
