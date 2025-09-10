@@ -4,134 +4,178 @@
   <meta charset="UTF-8">
   <title>先生ミニショップ</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1, h2 { text-align: center; }
-    .product-list { display: flex; flex-wrap: wrap; justify-content: center; }
-    .product { border: 1px solid #ccc; padding: 15px; margin: 10px; border-radius: 8px; width: 200px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-    .hidden { display: none; }
-    input[type='number'] { width: 60px; text-align: center; }
-    button { margin-top: 8px; padding: 5px 10px; border-radius: 5px; border: none; background-color: #4CAF50; color: white; cursor: pointer; }
-    button:hover { background-color: #45a049; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .product-list, .cart-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 15px;
+      width: 200px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .card img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+    .card h3 {
+      font-size: 16px;
+      margin: 8px 0;
+      color: #222;
+    }
+    .card p {
+      margin: 4px 0;
+      color: #555;
+    }
+    .card input {
+      width: 60px;
+      padding: 5px;
+      margin: 8px 0;
+      text-align: center;
+    }
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .add-btn { background: #007bff; color: #fff; }
+    .add-btn:hover { background: #0056b3; }
+    .order-btn { background: #28a745; color: #fff; margin-top: 15px; }
+    .order-btn:hover { background: #1e7e34; }
+    .back-btn { background: #6c757d; color: #fff; margin-top: 15px; }
+    .back-btn:hover { background: #545b62; }
+    .cart-list {
+      flex-direction: column;
+      align-items: center;
+    }
+    .cart-item {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin: 5px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: 300px;
+      text-align: left;
+    }
+    .cart-item input {
+      width: 50px;
+      margin-left: 10px;
+    }
+    .total {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
   <h1>先生ミニショップ</h1>
-
-  <!-- 商品選択画面 -->
-  <div id="catalogScreen">
-    <h2>商品一覧</h2>
-    <div class="product-list" id="productList"></div>
-    <div style="text-align:center;">
-      <button onclick="showCart()">カートを見る</button>
-    </div>
-  </div>
-
-  <!-- カート画面 -->
-  <div id="cartScreen" class="hidden">
+  <div id="productPage" class="product-list"></div>
+  <div id="cartPage" style="display:none;">
     <h2>注文確認</h2>
-    <div id="cart"></div>
-    <p id="total"></p>
-    <button onclick="submitOrder()">注文する</button>
-    <button onclick="showCatalog()">商品に戻る</button>
+    <div class="cart-list" id="cartList"></div>
+    <p class="total" id="totalPrice"></p>
+    <button class="back-btn" onclick="showProducts()">商品に戻る</button>
+    <button class="order-btn" onclick="confirmOrder()">注文する</button>
   </div>
 
   <script>
-    // 商品データ
     const products = [
-      { name: '赤ペン', price: 300, icon: '🖊️' },
-      { name: '黒ボールペン', price: 280, icon: '✒️' },
-      { name: '青ボールペン', price: 280, icon: '🖋️' },
-      { name: 'コーヒー', price: 150, icon: '☕' },
-      { name: '水', price: 100, icon: '💧' }
+      { id: 1, name: "赤ペン", price: 100, img: "https://img.icons8.com/color/100/red-pen.png" },
+      { id: 2, name: "黒ボールペン", price: 120, img: "https://img.icons8.com/color/100/ballpoint-pen.png" },
+      { id: 3, name: "青ボールペン", price: 120, img: "https://img.icons8.com/color/100/pen.png" },
+      { id: 4, name: "コーヒー", price: 150, img: "https://img.icons8.com/color/100/coffee.png" },
+      { id: 5, name: "水", price: 100, img: "https://img.icons8.com/color/100/water-bottle.png" }
     ];
-
     let cart = [];
 
-    // 商品一覧を表示
     function renderProducts() {
-      const list = document.getElementById('productList');
-      list.innerHTML = '';
-      products.forEach((p, idx) => {
-        list.innerHTML += `
-          <div class="product">
-            <div style="font-size:40px;">${p.icon}</div>
-            <strong>${p.name}</strong><br>
-            ${p.price}円<br>
-            数量: <input type="number" id="qty${idx}" min="1" value="1"><br>
-            <button onclick="addToCart('${p.name}', ${p.price}, document.getElementById('qty${idx}').value)">カートに追加</button>
-          </div>`;
+      const container = document.getElementById("productPage");
+      container.innerHTML = "";
+      products.forEach(p => {
+        container.innerHTML += `
+          <div class="card">
+            <img src="${p.img}" alt="${p.name}">
+            <h3>${p.name}</h3>
+            <p>¥${p.price}</p>
+            <input type="number" id="qty-${p.id}" min="1" value="1">
+            <button class="add-btn" onclick="addToCart(${p.id})">カートに追加</button>
+          </div>
+        `;
       });
     }
 
-    // カートに追加
-    function addToCart(name, price, qty) {
-      qty = parseInt(qty);
-      if (isNaN(qty) || qty <= 0) return;
-      let item = cart.find(p => p.name === name);
-      if (item) {
-        item.qty += qty;
+    function addToCart(id) {
+      const qty = parseInt(document.getElementById(`qty-${id}`).value);
+      const product = products.find(p => p.id === id);
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.qty += qty;
       } else {
-        cart.push({name, price, qty});
+        cart.push({ ...product, qty });
       }
-      alert(`${name}を${qty}個カートに追加しました`);
+      showCart();
     }
 
-    // カート画面を表示
     function showCart() {
-      document.getElementById('catalogScreen').classList.add('hidden');
-      document.getElementById('cartScreen').classList.remove('hidden');
-      renderCart();
-    }
-
-    // 商品画面を表示
-    function showCatalog() {
-      document.getElementById('cartScreen').classList.add('hidden');
-      document.getElementById('catalogScreen').classList.remove('hidden');
-    }
-
-    // カート内容を描画
-    function renderCart() {
-      let cartDiv = document.getElementById('cart');
-      cartDiv.innerHTML = '';
+      document.getElementById("productPage").style.display = "none";
+      document.getElementById("cartPage").style.display = "block";
+      const list = document.getElementById("cartList");
+      list.innerHTML = "";
       let total = 0;
-      cart.forEach((item, index) => {
-        let subtotal = item.price * item.qty;
-        total += subtotal;
-        cartDiv.innerHTML += `
-          <div>
-            ${item.name} - ${item.price}円 
-            数量: <input type="number" min="0" value="${item.qty}" onchange="updateQty(${index}, this.value)"> 
-            小計: ${subtotal}円
-          </div>`;
-      });
-      document.getElementById('total').innerText = '合計: ' + total + '円';
-    }
-
-    // 数量更新
-    function updateQty(index, newQty) {
-      newQty = parseInt(newQty);
-      if (isNaN(newQty) || newQty < 0) return;
-      if (newQty === 0) {
-        cart.splice(index, 1);
-      } else {
-        cart[index].qty = newQty;
-      }
-      renderCart();
-    }
-
-    // 注文送信（ダミー処理）
-    function submitOrder() {
-      if (cart.length === 0) {
-        alert('カートが空です');
-        return;
-      }
-      let orderText = '注文内容:\n';
       cart.forEach(item => {
-        orderText += `${item.name} x ${item.qty}\n`;
+        total += item.price * item.qty;
+        list.innerHTML += `
+          <div class="cart-item">
+            ${item.name} - ¥${item.price} × 
+            <input type="number" value="${item.qty}" min="0" onchange="updateQty(${item.id}, this.value)">
+          </div>
+        `;
       });
-      alert(orderText + '\n注文を送信しました！');
+      document.getElementById("totalPrice").innerText = "合計: ¥" + total;
+    }
+
+    function updateQty(id, qty) {
+      const item = cart.find(i => i.id === id);
+      item.qty = parseInt(qty);
+      if (item.qty <= 0) {
+        cart = cart.filter(i => i.id !== id);
+      }
+      showCart();
+    }
+
+    function showProducts() {
+      document.getElementById("cartPage").style.display = "none";
+      document.getElementById("productPage").style.display = "flex";
+    }
+
+    function confirmOrder() {
+      alert("注文が確定しました！\n" + cart.map(i => `${i.name} ×${i.qty}`).join("\n"));
       cart = [];
-      showCatalog();
+      showProducts();
     }
 
     renderProducts();
