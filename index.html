@@ -107,7 +107,7 @@
         total: cart.reduce((sum, i) => sum + i.price * i.qty, 0)
       };
 
-      fetch("★★ここにGASのURLを貼る★★", {
+      fetch("https://script.google.com/a/macros/ict.shimanet.ed.jp/s/AKfycbxsfq6QeDHA-W3nbXLlz46mw8MyLhSG9V1y8ji7GBWk-e6uMHAJjMP10q4RDP8qeQA2/exec", {
         method: "POST",
         body: JSON.stringify(orderData)
       })
