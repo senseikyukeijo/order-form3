@@ -33,7 +33,12 @@
     <button class="order-btn" onclick="confirmOrder()">注文する</button>
   </div>
 
+  <!-- LIFF SDK 読み込み -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
+    // ★ ここにあなたのLIFF IDを入れる
+    const liffId = "2008097125-Ve0dXDGE";
+
     const products = [
       { id: 1, name: "赤ペン", price: 100, img: "https://img.icons8.com/color/100/red-pen.png" },
       { id: 2, name: "黒ボールペン", price: 120, img: "https://img.icons8.com/color/100/ballpoint-pen.png" },
@@ -101,28 +106,40 @@
       document.getElementById("productPage").style.display = "flex";
     }
 
-    function confirmOrder() {
+    async function confirmOrder() {
       const orderData = {
         items: cart,
         total: cart.reduce((sum, i) => sum + i.price * i.qty, 0)
       };
 
-      fetch("https://script.google.com/a/macros/ict.shimanet.ed.jp/s/AKfycbxsfq6QeDHA-W3nbXLlz46mw8MyLhSG9V1y8ji7GBWk-e6uMHAJjMP10q4RDP8qeQA2/exec", {
+      // ① スプレッドシートに保存
+      await fetch("https://script.google.com/a/macros/ict.shimanet.ed.jp/s/AKfycbxsfq6QeDHA-W3nbXLlz46mw8MyLhSG9V1y8ji7GBWk-e6uMHAJjMP10q4RDP8qeQA2/exec", {
         method: "POST",
         body: JSON.stringify(orderData)
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert("注文がスプレッドシートに保存されました！");
-        cart = [];
-        showProducts();
-      })
-      .catch(err => {
-        alert("エラーが発生しました: " + err);
-      });
+      }).catch(err => alert("保存エラー: " + err));
+
+      // ② LINEトークに送信
+      const message = cart.map(c => `${c.name} × ${c.qty}`).join("\n");
+      const total = orderData.total;
+      await liff.sendMessages([
+        { type: "text", text: `🛒 注文内容\n${message}\n---\n合計: ¥${total}` }
+      ]).catch(err => alert("送信エラー: " + err));
+
+      alert("注文が送信されました！");
+      cart = [];
+      showProducts();
     }
 
-    renderProducts();
+    async function main() {
+      await liff.init({ liffId });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+      } else {
+        renderProducts();
+      }
+    }
+
+    main();
   </script>
 </body>
 </html>
