@@ -4,91 +4,22 @@
   <meta charset="UTF-8">
   <title>先生ミニショップ</title>
   <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
-    h1 {
-      color: #333;
-      margin-bottom: 20px;
-    }
-    .product-list, .cart-list {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      padding: 15px;
-      width: 200px;
-      text-align: center;
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: scale(1.05);
-    }
-    .card img {
-      width: 100px;
-      height: 100px;
-      object-fit: contain;
-      margin-bottom: 10px;
-    }
-    .card h3 {
-      font-size: 16px;
-      margin: 8px 0;
-      color: #222;
-    }
-    .card p {
-      margin: 4px 0;
-      color: #555;
-    }
-    .card input {
-      width: 60px;
-      padding: 5px;
-      margin: 8px 0;
-      text-align: center;
-    }
-    button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+    body { font-family: "Segoe UI", sans-serif; background: #f4f6f9; padding: 20px; text-align: center; }
+    h1 { color: #333; }
+    .product-list, .cart-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 15px; width: 200px; text-align: center; }
+    .card img { width: 100px; height: 100px; object-fit: contain; }
+    .card h3 { font-size: 16px; margin: 8px 0; }
+    .card p { margin: 4px 0; color: #555; }
+    .card input { width: 60px; padding: 5px; text-align: center; }
+    button { padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; }
     .add-btn { background: #007bff; color: #fff; }
     .add-btn:hover { background: #0056b3; }
     .order-btn { background: #28a745; color: #fff; margin-top: 15px; }
-    .order-btn:hover { background: #1e7e34; }
     .back-btn { background: #6c757d; color: #fff; margin-top: 15px; }
-    .back-btn:hover { background: #545b62; }
-    .cart-list {
-      flex-direction: column;
-      align-items: center;
-    }
-    .cart-item {
-      background: #fff;
-      border-radius: 8px;
-      padding: 10px 15px;
-      margin: 5px 0;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      width: 300px;
-      text-align: left;
-    }
-    .cart-item input {
-      width: 50px;
-      margin-left: 10px;
-    }
-    .total {
-      font-size: 18px;
-      font-weight: bold;
-      margin-top: 15px;
-    }
+    .cart-item { background: #fff; border-radius: 8px; padding: 10px; margin: 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 300px; text-align: left; }
+    .cart-item input { width: 50px; }
+    .total { font-size: 18px; font-weight: bold; margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -161,9 +92,7 @@
     function updateQty(id, qty) {
       const item = cart.find(i => i.id === id);
       item.qty = parseInt(qty);
-      if (item.qty <= 0) {
-        cart = cart.filter(i => i.id !== id);
-      }
+      if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
       showCart();
     }
 
@@ -173,9 +102,24 @@
     }
 
     function confirmOrder() {
-      alert("注文が確定しました！\n" + cart.map(i => `${i.name} ×${i.qty}`).join("\n"));
-      cart = [];
-      showProducts();
+      const orderData = {
+        items: cart,
+        total: cart.reduce((sum, i) => sum + i.price * i.qty, 0)
+      };
+
+      fetch("★★ここにGASのURLを貼る★★", {
+        method: "POST",
+        body: JSON.stringify(orderData)
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert("注文がスプレッドシートに保存されました！");
+        cart = [];
+        showProducts();
+      })
+      .catch(err => {
+        alert("エラーが発生しました: " + err);
+      });
     }
 
     renderProducts();
