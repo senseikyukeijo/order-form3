@@ -2,144 +2,166 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>先生ミニショップ</title>
   <style>
-    body { font-family: "Segoe UI", sans-serif; background: #f4f6f9; padding: 20px; text-align: center; }
-    h1 { color: #333; }
-    .product-list, .cart-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-    .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 15px; width: 200px; text-align: center; }
-    .card img { width: 100px; height: 100px; object-fit: contain; }
-    .card h3 { font-size: 16px; margin: 8px 0; }
-    .card p { margin: 4px 0; color: #555; }
-    .card input { width: 60px; padding: 5px; text-align: center; }
-    button { padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; }
-    .add-btn { background: #007bff; color: #fff; }
-    .add-btn:hover { background: #0056b3; }
-    .order-btn { background: #28a745; color: #fff; margin-top: 15px; }
-    .back-btn { background: #6c757d; color: #fff; margin-top: 15px; }
-    .cart-item { background: #fff; border-radius: 8px; padding: 10px; margin: 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 300px; text-align: left; }
-    .cart-item input { width: 50px; }
-    .total { font-size: 18px; font-weight: bold; margin-top: 15px; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .card img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+    .card button {
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .card button:hover {
+      background: #45a049;
+    }
+    #cart {
+      margin-top: 30px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    #cart table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #cart th, #cart td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+    #total {
+      text-align: right;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>先生ミニショップ</h1>
-  <div id="productPage" class="product-list"></div>
-  <div id="cartPage" style="display:none;">
-    <h2>注文確認</h2>
-    <div class="cart-list" id="cartList"></div>
-    <p class="total" id="totalPrice"></p>
-    <button class="back-btn" onclick="showProducts()">商品に戻る</button>
-    <button class="order-btn" onclick="confirmOrder()">注文する</button>
+
+  <div class="products">
+    <div class="card">
+      <img src="https://img.icons8.com/color/96/pen.png" alt="赤ペン">
+      <h3>赤ペン</h3>
+      <p>100円</p>
+      <button onclick="addToCart('赤ペン', 100)">カートに追加</button>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/color/96/ballpoint-pen.png" alt="黒ボールペン">
+      <h3>黒ボールペン</h3>
+      <p>120円</p>
+      <button onclick="addToCart('黒ボールペン', 120)">カートに追加</button>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/color/96/pen.png" alt="青ボールペン">
+      <h3>青ボールペン</h3>
+      <p>120円</p>
+      <button onclick="addToCart('青ボールペン', 120)">カートに追加</button>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/color/96/coffee.png" alt="コーヒー">
+      <h3>コーヒー</h3>
+      <p>150円</p>
+      <button onclick="addToCart('コーヒー', 150)">カートに追加</button>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/color/96/water-bottle.png" alt="水">
+      <h3>水</h3>
+      <p>100円</p>
+      <button onclick="addToCart('水', 100)">カートに追加</button>
+    </div>
   </div>
 
-  <!-- LIFF SDK 読み込み -->
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-    // ★ ここにあなたのLIFF IDを入れる
-    const liffId = "2008097125-Ve0dXDGE";
+  <div id="cart">
+    <h2>🛒 注文カート</h2>
+    <table id="cartTable">
+      <thead>
+        <tr><th>商品</th><th>数量</th><th>価格</th><th>小計</th><th>削除</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p id="total">合計: 0円</p>
+  </div>
 
-    const products = [
-      { id: 1, name: "赤ペン", price: 100, img: "https://img.icons8.com/color/100/red-pen.png" },
-      { id: 2, name: "黒ボールペン", price: 120, img: "https://img.icons8.com/color/100/ballpoint-pen.png" },
-      { id: 3, name: "青ボールペン", price: 120, img: "https://img.icons8.com/color/100/pen.png" },
-      { id: 4, name: "コーヒー", price: 150, img: "https://img.icons8.com/color/100/coffee.png" },
-      { id: 5, name: "水", price: 100, img: "https://img.icons8.com/color/100/water-bottle.png" }
-    ];
+  <script>
     let cart = [];
 
-    function renderProducts() {
-      const container = document.getElementById("productPage");
-      container.innerHTML = "";
-      products.forEach(p => {
-        container.innerHTML += `
-          <div class="card">
-            <img src="${p.img}" alt="${p.name}">
-            <h3>${p.name}</h3>
-            <p>¥${p.price}</p>
-            <input type="number" id="qty-${p.id}" min="1" value="1">
-            <button class="add-btn" onclick="addToCart(${p.id})">カートに追加</button>
-          </div>
-        `;
-      });
-    }
-
-    function addToCart(id) {
-      const qty = parseInt(document.getElementById(`qty-${id}`).value);
-      const product = products.find(p => p.id === id);
-      const existing = cart.find(item => item.id === id);
-      if (existing) {
-        existing.qty += qty;
+    function addToCart(name, price) {
+      const item = cart.find(i => i.name === name);
+      if (item) {
+        item.qty++;
       } else {
-        cart.push({ ...product, qty });
+        cart.push({ name, price, qty: 1 });
       }
-      showCart();
+      renderCart();
     }
 
-    function showCart() {
-      document.getElementById("productPage").style.display = "none";
-      document.getElementById("cartPage").style.display = "block";
-      const list = document.getElementById("cartList");
-      list.innerHTML = "";
+    function removeFromCart(name) {
+      cart = cart.filter(i => i.name !== name);
+      renderCart();
+    }
+
+    function updateQty(name, qty) {
+      const item = cart.find(i => i.name === name);
+      if (item) {
+        item.qty = qty > 0 ? qty : 1;
+      }
+      renderCart();
+    }
+
+    function renderCart() {
+      const tbody = document.querySelector("#cartTable tbody");
+      tbody.innerHTML = "";
       let total = 0;
       cart.forEach(item => {
-        total += item.price * item.qty;
-        list.innerHTML += `
-          <div class="cart-item">
-            ${item.name} - ¥${item.price} × 
-            <input type="number" value="${item.qty}" min="0" onchange="updateQty(${item.id}, this.value)">
-          </div>
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.name}</td>
+            <td><input type="number" value="${item.qty}" min="1" onchange="updateQty('${item.name}', this.value)"></td>
+            <td>${item.price}円</td>
+            <td>${subtotal}円</td>
+            <td><button onclick="removeFromCart('${item.name}')">削除</button></td>
+          </tr>
         `;
       });
-      document.getElementById("totalPrice").innerText = "合計: ¥" + total;
+      document.getElementById("total").innerText = "合計: " + total + "円";
     }
-
-    function updateQty(id, qty) {
-      const item = cart.find(i => i.id === id);
-      item.qty = parseInt(qty);
-      if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
-      showCart();
-    }
-
-    function showProducts() {
-      document.getElementById("cartPage").style.display = "none";
-      document.getElementById("productPage").style.display = "flex";
-    }
-
-    async function confirmOrder() {
-      const orderData = {
-        items: cart,
-        total: cart.reduce((sum, i) => sum + i.price * i.qty, 0)
-      };
-
-      // ① スプレッドシートに保存
-      await fetch("https://script.google.com/a/macros/ict.shimanet.ed.jp/s/AKfycbzlYXIV4FrO7ubbGZ76DTiyiPxCjAOCVYoc1QgE7zVEhykPc7m9ze-4m_ct53a93M4D/exec", {
-        method: "POST",
-        body: JSON.stringify(orderData)
-      }).catch(err => alert("保存エラー: " + err));
-
-      // ② LINEトークに送信
-      const message = cart.map(c => `${c.name} × ${c.qty}`).join("\n");
-      const total = orderData.total;
-      await liff.sendMessages([
-        { type: "text", text: `🛒 注文内容\n${message}\n---\n合計: ¥${total}` }
-      ]).catch(err => alert("送信エラー: " + err));
-
-      alert("注文が送信されました！");
-      cart = [];
-      showProducts();
-    }
-
-    async function main() {
-      await liff.init({ liffId });
-      if (!liff.isLoggedIn()) {
-        liff.login();
-      } else {
-        renderProducts();
-      }
-    }
-
-    main();
   </script>
 </body>
 </html>
