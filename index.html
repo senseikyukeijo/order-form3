@@ -17,6 +17,7 @@
     #cart th, #cart td { padding: 8px; border-bottom: 1px solid #ddd; text-align: center; }
     #total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 10px; }
     #history { margin-top: 30px; background: #eef; padding: 15px; border-radius: 12px; }
+    #historyList { padding-left: 20px; }
   </style>
 </head>
 <body>
@@ -129,7 +130,7 @@
       const now = new Date().toLocaleString();
       const order = { time: now, items: [...cart] };
 
-      // 履歴をローカルストレージに保存
+      // ローカルストレージに保存
       const history = JSON.parse(localStorage.getItem("orderHistory") || "[]");
       history.push(order);
       localStorage.setItem("orderHistory", JSON.stringify(history));
