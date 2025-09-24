@@ -5,88 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>先生ミニショップ</title>
   <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #f7f9fc;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .products {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    .card img {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      margin-bottom: 10px;
-    }
-    .card button {
-      background: #4CAF50;
-      color: #fff;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-    .card button:hover {
-      background: #45a049;
-    }
-    #cart {
-      margin-top: 30px;
-      background: #fff;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    #cart table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    #cart th, #cart td {
-      padding: 8px;
-      border-bottom: 1px solid #ddd;
-      text-align: center;
-    }
-    #total {
-      text-align: right;
-      font-size: 18px;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    #sendBtn {
-      display: block;
-      margin: 20px auto;
-      padding: 12px 20px;
-      background: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    #sendBtn:hover {
-      background: #1976D2;
-    }
+    body { font-family: "Segoe UI", sans-serif; background: #f7f9fc; margin: 0; padding: 20px; }
+    h1 { text-align: center; color: #333; }
+    .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; }
+    .card img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+    .card button { background: #4CAF50; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-top: 5px; }
+    .card button:hover { background: #45a049; }
+    #cart { margin-top: 30px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    #cart table { width: 100%; border-collapse: collapse; }
+    #cart th, #cart td { padding: 8px; border-bottom: 1px solid #ddd; text-align: center; }
+    #total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 10px; }
+    #history { margin-top: 30px; background: #eef; padding: 15px; border-radius: 12px; }
   </style>
 </head>
 <body>
   <h1>先生ミニショップ</h1>
 
+  <!-- 商品一覧 -->
   <div class="products">
     <div class="card">
       <img src="https://img.icons8.com/color/96/pen.png" alt="赤ペン">
@@ -120,6 +56,7 @@
     </div>
   </div>
 
+  <!-- カート -->
   <div id="cart">
     <h2>🛒 注文カート</h2>
     <table id="cartTable">
@@ -129,10 +66,14 @@
       <tbody></tbody>
     </table>
     <p id="total">合計: 0円</p>
+    <button onclick="submitOrder()">注文を確定する</button>
   </div>
 
-  <button id="sendBtn" onclick="sendOrder()">注文を送信</button>
-  <p id="responseMsg" style="text-align:center; color:green; font-weight:bold;"></p>
+  <!-- 履歴 -->
+  <div id="history">
+    <h2>📜 注文履歴</h2>
+    <ul id="historyList"></ul>
+  </div>
 
   <script>
     let cart = [];
@@ -180,35 +121,39 @@
       document.getElementById("total").innerText = "合計: " + total + "円";
     }
 
-    async function sendOrder() {
+    function submitOrder() {
       if (cart.length === 0) {
         alert("カートが空です！");
         return;
       }
+      const now = new Date().toLocaleString();
+      const order = { time: now, items: [...cart] };
 
-      const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-      const data = { items: cart, total };
+      // 履歴をローカルストレージに保存
+      const history = JSON.parse(localStorage.getItem("orderHistory") || "[]");
+      history.push(order);
+      localStorage.setItem("orderHistory", JSON.stringify(history));
 
-      try {
-        // ★ ここに自分のGASのWebアプリURLを入れる
-        const response = await fetch("YOUR_GAS_WEBAPP_URL", {
-          method: "POST",
-          body: JSON.stringify(data),
-          headers: { "Content-Type": "application/json" }
-        });
+      // 履歴を再描画
+      renderHistory();
 
-        const result = await response.json();
-        document.getElementById("responseMsg").innerText = 
-          result.result === "success" ? "注文が送信されました！" : "エラー: " + result.message;
-
-        if (result.result === "success") {
-          cart = [];
-          renderCart();
-        }
-      } catch (err) {
-        document.getElementById("responseMsg").innerText = "通信エラー: " + err.message;
-      }
+      alert("注文を保存しました！（このスマホに記録されます）");
+      cart = [];
+      renderCart();
     }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem("orderHistory") || "[]");
+      const list = document.getElementById("historyList");
+      list.innerHTML = "";
+      history.forEach(order => {
+        let itemsText = order.items.map(i => `${i.name}×${i.qty}`).join(", ");
+        list.innerHTML += `<li>${order.time}：${itemsText}</li>`;
+      });
+    }
+
+    // ページ読み込み時に履歴を表示
+    renderHistory();
   </script>
 </body>
 </html>
