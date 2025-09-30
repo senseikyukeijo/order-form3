@@ -2,160 +2,72 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>先生ミニショップ</title>
   <style>
-    body { font-family: "Segoe UI", sans-serif; background: #f7f9fc; margin: 0; padding: 20px; }
-    h1 { text-align: center; color: #333; }
-    .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
-    .card { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; }
-    .card img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
-    .card button { background: #4CAF50; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-top: 5px; }
-    .card button:hover { background: #45a049; }
-    #cart { margin-top: 30px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    #cart table { width: 100%; border-collapse: collapse; }
-    #cart th, #cart td { padding: 8px; border-bottom: 1px solid #ddd; text-align: center; }
-    #total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 10px; }
+    body { font-family: sans-serif; margin: 20px; }
+    .form-group { margin-bottom: 10px; }
+    img { width: 100px; margin: 10px 0; }
+    button { padding: 8px 16px; margin-top: 10px; }
   </style>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <h1>先生ミニショップ</h1>
-
-  <!-- 商品一覧 -->
-  <div class="products">
-    <div class="card">
-      <img src="https://img.icons8.com/color/96/pen.png" alt="赤ペン">
-      <h3>赤ペン</h3>
-      <p>100円</p>
-      <button onclick="addToCart('赤ペン', 100)">カートに追加</button>
-    </div>
-    <div class="card">
-      <img src="https://img.icons8.com/ios-filled/100/000000/ball-point-pen.png" alt="黒ボールペン">
-      <h3>黒ボールペン</h3>
-      <p>120円</p>
-      <button onclick="addToCart('黒ボールペン', 120)">カートに追加</button>
-    </div>
-    <div class="card">
-      <img src="https://img.icons8.com/color/96/pen.png" alt="青ボールペン">
-      <h3>青ボールペン</h3>
-      <p>120円</p>
-      <button onclick="addToCart('青ボールペン', 120)">カートに追加</button>
-    </div>
-    <div class="card">
-      <img src="https://img.icons8.com/color/96/coffee.png" alt="コーヒー">
-      <h3>コーヒー</h3>
-      <p>150円</p>
-      <button onclick="addToCart('コーヒー', 150)">カートに追加</button>
-    </div>
-    <div class="card">
-      <img src="https://img.icons8.com/color/96/water-bottle.png" alt="水">
-      <h3>水</h3>
-      <p>100円</p>
-      <button onclick="addToCart('水', 100)">カートに追加</button>
-    </div>
+  <h2>注文フォーム</h2>
+  <div class="form-group">
+    <label>商品名: <input type="text" id="item" value="黒ボールペン"></label>
+  </div>
+  <div class="form-group">
+    <label>数量: <input type="number" id="qty" value="1" min="1"></label>
+  </div>
+  <div class="form-group">
+    <label>単価: <input type="number" id="price" value="100" min="0"></label>
   </div>
 
-  <!-- カート -->
-  <div id="cart">
-    <h2>🛒 注文カート</h2>
-    <table id="cartTable">
-      <thead>
-        <tr><th>商品</th><th>数量</th><th>価格</th><th>小計</th><th>削除</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <p id="total">合計: 0円</p>
-    <button onclick="submitOrder()">注文を確定する</button>
-  </div>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Ballpoint_pen_%28blue%29.jpg/320px-Ballpoint_pen_%28blue%29.jpg" alt="黒ボールペン">
+
+  <button onclick="sendOrder()">注文を確定する</button>
 
   <script>
-    let cart = [];
-    let userId = "";
+    // ★ ここに自分の GAS WebアプリのURLを入れてください（最後は /exec）
+    const GAS_URL = "https://script.google.com/a/macros/ict.shimanet.ed.jp/s/AKfycbzv8NtuGUy4Co_dgosZj5TxaPxjEd7ekxrR2_hZWU6PQygaHmwc4gX8Apdfo9B0loVv/exec";
 
-    async function initLiff() {
-      await liff.init({ liffId: "ここに自分のLIFF ID" });
-      if (!liff.isLoggedIn()) {
-        liff.login();
-      } else {
-        const profile = await liff.getProfile();
-        userId = profile.userId;
-        console.log("ログイン中ユーザー:", profile.displayName, userId);
-      }
-    }
+    async function sendOrder() {
+      const item = document.getElementById("item").value;
+      const qty = parseInt(document.getElementById("qty").value, 10);
+      const price = parseInt(document.getElementById("price").value, 10);
 
-    function addToCart(name, price) {
-      const item = cart.find(i => i.name === name);
-      if (item) {
-        item.qty++;
-      } else {
-        cart.push({ name, price, qty: 1 });
-      }
-      renderCart();
-    }
-
-    function removeFromCart(name) {
-      cart = cart.filter(i => i.name !== name);
-      renderCart();
-    }
-
-    function updateQty(name, qty) {
-      const item = cart.find(i => i.name === name);
-      if (item) {
-        item.qty = qty > 0 ? parseInt(qty, 10) : 1;
-      }
-      renderCart();
-    }
-
-    function renderCart() {
-      const tbody = document.querySelector("#cartTable tbody");
-      tbody.innerHTML = "";
-      let total = 0;
-      cart.forEach(item => {
-        const subtotal = item.price * item.qty;
-        total += subtotal;
-        tbody.innerHTML += `
-          <tr>
-            <td>${item.name}</td>
-            <td><input type="number" value="${item.qty}" min="1" onchange="updateQty('${item.name}', this.value)"></td>
-            <td>${item.price}円</td>
-            <td>${subtotal}円</td>
-            <td><button onclick="removeFromCart('${item.name}')">削除</button></td>
-          </tr>
-        `;
-      });
-      document.getElementById("total").innerText = "合計: " + total + "円";
-    }
-
-    function submitOrder() {
-      if (cart.length === 0) {
-        alert("カートが空です！");
-        return;
-      }
-      const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
       const orderData = {
-        userId: userId,
-        items: cart,
-        total: total
+        total: qty * price,
+        items: [
+          { name: item, qty: qty, price: price }
+        ]
       };
 
-      google.script.run
-        .withSuccessHandler(res => {
-          if (res.result === "success") {
-            alert("注文を送信しました！");
-            cart = [];
-            renderCart();
-          } else {
-            alert("エラー: " + res.message);
-          }
-        })
-        .withFailureHandler(err => {
-          alert("通信エラー: " + err);
-        })
-        .saveOrder(orderData);
-    }
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData)
+        });
 
-    window.onload = initLiff;
+        // 返り値がJSONの場合のみ処理
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error("サーバーからの応答が不正です: " + text);
+        }
+
+        if (data.result === "success") {
+          alert("注文を確定しました！");
+        } else {
+          alert("エラー: " + (data.message || "注文できませんでした"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("通信エラー: " + err.message);
+      }
+    }
   </script>
 </body>
 </html>
