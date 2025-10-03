@@ -3,39 +3,186 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>注文フォーム</title>
+  <title>先生ミニショップ</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      padding: 15px;
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .card img {
+      max-width: 100px;
+      margin-bottom: 10px;
+    }
+    .cart {
+      margin-top: 40px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-  <h1>注文ページ</h1>
+  <h1>先生ミニショップ</h1>
   <div id="userInfo"></div>
 
-  <form id="orderForm">
-    <label>注文者名:
-      <input type="text" name="customer" required>
-    </label><br>
+  <!-- 商品一覧 -->
+  <div class="container">
+    <div class="card">
+      <img src="https://img.icons8.com/ios-filled/100/000000/ball-point-pen.png" alt="黒ボールペン">
+      <h3>黒ボールペン</h3>
+      <p>120円</p>
+      <button onclick="addToCart('黒ボールペン', 120)">カートに追加</button>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/color/96/pen.png" alt="青ボールペン">
+      <h3>青ボールペン</h3>
+      <p>120円</p>
+      <button onclick="addToCart('青ボールペン', 120)">カートに追加</button>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/color/96/coffee.png" alt="コーヒー">
+      <h3>コーヒー</h3>
+      <p>150円</p>
+      <button onclick="addToCart('コーヒー', 150)">カートに追加</button>
+    </div>
+    <div class="card">
+      <img src="https://img.icons8.com/color/96/water-bottle.png" alt="水">
+      <h3>水</h3>
+      <p>100円</p>
+      <button onclick="addToCart('水', 100)">カートに追加</button>
+    </div>
+  </div>
 
-    <label>商品名:
-      <input type="text" name="item" required>
-    </label><br>
+  <!-- カート表示 -->
+  <div class="cart">
+    <h2>カート</h2>
+    <ul id="cart-list"></ul>
+    <p id="total">合計: 0円</p>
 
-    <label>数量:
-      <input type="number" name="quantity" min="1" value="1" required>
-    </label><br>
+    <!-- 注文者名入力欄 -->
+    <label for="customer-name">注文者の名前：</label>
+    <input type="text" id="customer-name" placeholder="お名前を入力してください">
 
-    <button type="submit">注文する</button>
-  </form>
+    <button onclick="submitOrder()">注文を確定</button>
+  </div>
 
   <script>
-    // あなたの LIFF ID を設定してください
-    const liffId = "2008097125-Ve0dXDGE";
+    const liffId = "2008097125-Ve0dXDGE"; // ← LINE Developersで発行されたLIFF ID
+    const gasUrl = "1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs"; // ← GASのWebアプリ公開URL
 
-    // あなたの GAS WebApp URL を設定してください
-    const gasUrl = "1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs";
+    let cart = [];
 
+    // カートに商品を追加
+    function addToCart(name, price) {
+      const existing = cart.find(item => item.name === name);
+      if (existing) {
+        existing.quantity++;
+        existing.subtotal = existing.quantity * price;
+      } else {
+        cart.push({ name, price, quantity: 1, subtotal: price });
+      }
+      renderCart();
+    }
+
+    // カートを画面に表示
+    function renderCart() {
+      const list = document.getElementById('cart-list');
+      const totalEl = document.getElementById('total');
+      list.innerHTML = '';
+      let total = 0;
+      cart.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} x ${item.quantity} = ${item.subtotal}円`;
+        list.appendChild(li);
+        total += item.subtotal;
+      });
+      totalEl.textContent = `合計: ${total}円`;
+    }
+
+    // 注文をGASに送信
+    function submitOrder() {
+      if (cart.length === 0) {
+        alert("カートが空です");
+        return;
+      }
+      const name = document.getElementById("customer-name").value.trim();
+      if (!name) {
+        alert("注文者の名前を入力してください");
+        return;
+      }
+
+      const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
+      const order = {
+        customer: name,
+        items: cart,
+        total: total,
+        orderDate: new Date().toISOString()
+      };
+
+      fetch(gasUrl, {
+        method: "POST",
+        body: JSON.stringify(order),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => res.text())
+      .then(() => {
+        alert("注文が確定しました！");
+        cart = [];
+        renderCart();
+        document.getElementById("customer-name").value = "";
+      })
+      .catch(err => {
+        alert("送信エラー: " + err);
+      });
+    }
+
+    // LIFF初期化
     async function main() {
       await liff.init({ liffId });
-
       if (!liff.isLoggedIn()) {
         liff.login();
       } else {
@@ -44,31 +191,7 @@
           `<p>ようこそ ${profile.displayName} さん</p>`;
       }
     }
-
     main();
-
-    // フォーム送信処理
-    document.getElementById("orderForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = {
-        customer: formData.get("customer"),
-        item: formData.get("item"),
-        quantity: formData.get("quantity"),
-        orderDate: new Date().toISOString(),
-      };
-
-      try {
-        await fetch(gasUrl, {
-          method: "POST",
-          body: JSON.stringify(data),
-        });
-        alert("注文が送信されました！");
-        e.target.reset(); // 入力欄リセット
-      } catch (err) {
-        alert("エラーが発生しました: " + err);
-      }
-    });
   </script>
 </body>
 </html>
