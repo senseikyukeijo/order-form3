@@ -6,63 +6,16 @@
   <title>先生ミニショップ</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #f7f9fc;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-top: 30px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      text-align: center;
-      padding: 15px;
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: scale(1.05);
-    }
-    .card img {
-      max-width: 100px;
-      margin-bottom: 10px;
-    }
-    .cart {
-      margin-top: 40px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
+    body { font-family: "Segoe UI", sans-serif; background: #f7f9fc; margin: 0; padding: 20px; }
+    h1 { text-align: center; color: #333; }
+    .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; padding: 15px; transition: transform 0.2s; }
+    .card:hover { transform: scale(1.05); }
+    .card img { max-width: 100px; margin-bottom: 10px; }
+    .cart { margin-top: 40px; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+    button:hover { background: #0056b3; }
+    input[type="text"] { width: 100%; padding: 8px; margin-top: 8px; border: 1px solid #ccc; border-radius: 6px; }
   </style>
 </head>
 <body>
@@ -111,12 +64,11 @@
   </div>
 
   <script>
-    const liffId = "2008097125-Ve0dXDGE"; // あなたのLIFF ID
-    const gasUrl = "1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs"; // あなたのGAS WebアプリURLに置き換える
+    const liffId = "2008097125-Ve0dXDGE"; // ←自分のLIFF ID
+    const gasUrl = "1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs"; // ←GASのWebアプリURL
 
     let cart = [];
 
-    // カートに商品を追加
     function addToCart(name, price) {
       const existing = cart.find(item => item.name === name);
       if (existing) {
@@ -128,7 +80,6 @@
       renderCart();
     }
 
-    // カートを画面に表示
     function renderCart() {
       const list = document.getElementById('cart-list');
       const totalEl = document.getElementById('total');
@@ -143,7 +94,6 @@
       totalEl.textContent = `合計: ${total}円`;
     }
 
-    // 注文を送信
     function submitOrder() {
       if (cart.length === 0) {
         alert("カートが空です");
@@ -157,7 +107,7 @@
 
       const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
       const order = {
-        customer: name, // 手入力した注文者の名前
+        customer: name,
         items: cart,
         total: total,
         orderDate: new Date().toISOString()
@@ -175,20 +125,16 @@
         renderCart();
         document.getElementById("customer-name").value = "";
       })
-      .catch(err => {
-        alert("送信エラー: " + err);
-      });
+      .catch(err => alert("送信エラー: " + err));
     }
 
-    // LIFF初期化
     async function main() {
       await liff.init({ liffId });
-      if (!liff.isLoggedIn()) {
-        liff.login();
-      } else {
+      if (!liff.isLoggedIn()) liff.login();
+      else {
         const profile = await liff.getProfile();
         document.getElementById("userInfo").innerHTML =
-          `<p>LINEログイン中: ${profile.displayName} さん</p>`;
+          `<p>ようこそ ${profile.displayName} さん</p>`;
       }
     }
     main();
