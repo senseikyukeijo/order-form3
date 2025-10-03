@@ -112,7 +112,7 @@ function renderCart() {
 // LIFF初期化（必要なら）
 async function initLiff() {
   try {
-    await liff.init({ liffId: "YOUR_LIFF_ID" });
+    await liff.init({ liffId: "2008201630-dvJg4lYw" });
     if(!liff.isLoggedIn()) liff.login();
   } catch(e) {
     console.log("LIFF初期化エラー:", e);
@@ -129,7 +129,7 @@ async function submitOrder(){
   const orderData = { buyerName, items: cart, total };
 
   try{
-    const response = await fetch("https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec", {
+    const response = await fetch("https://script.google.com/macros/s/1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs/exec", {
       method: "POST",
       body: JSON.stringify(orderData),
       headers: { "Content-Type": "application/json" }
