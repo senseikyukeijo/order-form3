@@ -50,7 +50,7 @@ let products = [
   { name: "水", price: 100, img: "https://img.icons8.com/color/96/water-bottle.png" }
 ];
 
-// 商品カードを描画
+// 商品カード描画
 function renderProducts() {
   const container = document.getElementById("productList");
   container.innerHTML = "";
@@ -67,7 +67,7 @@ function renderProducts() {
   });
 }
 
-// カートに追加
+// カート操作
 function addToCart(name, price) {
   const item = cart.find(i => i.name === name);
   if(item) item.qty++;
@@ -75,20 +75,17 @@ function addToCart(name, price) {
   renderCart();
 }
 
-// カートから削除
 function removeFromCart(name) {
   cart = cart.filter(i => i.name !== name);
   renderCart();
 }
 
-// 数量更新
 function updateQty(name, qty) {
   const item = cart.find(i => i.name === name);
   if(item) item.qty = qty > 0 ? parseInt(qty,10) : 1;
   renderCart();
 }
 
-// カート描画
 function renderCart() {
   const tbody = document.querySelector("#cartTable tbody");
   tbody.innerHTML = "";
@@ -112,7 +109,7 @@ function renderCart() {
 // LIFF初期化（必要なら）
 async function initLiff() {
   try {
-    await liff.init({ liffId: "2008201630-dvJg4lYw" });
+    await liff.init({ liffId: "2008201630-dvJg4lYw" }); // 必要に応じてLIFF IDを設定
     if(!liff.isLoggedIn()) liff.login();
   } catch(e) {
     console.log("LIFF初期化エラー:", e);
@@ -129,11 +126,14 @@ async function submitOrder(){
   const orderData = { buyerName, items: cart, total };
 
   try{
-    const response = await fetch("https://script.google.com/a/macros/ict.shimanet.ed.jp/s/AKfycbw2Jc4-zBCRZLo4e4MgWeGu3Kg0e8yvmt5DtrRkY2CuvJMIQl8Cw2M5xL44GIJkAfC5/exec", {
-      method: "POST",
-      body: JSON.stringify(orderData),
-      headers: { "Content-Type": "application/json" }
-    });
+    const response = await fetch(
+      "https://script.google.com/macros/s/1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs/exec",
+      {
+        method: "POST",
+        body: JSON.stringify(orderData),
+        headers: { "Content-Type": "application/json" }
+      }
+    );
     const result = await response.json();
     if(result.result==="success"){
       alert("注文が確定しました！");
