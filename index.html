@@ -50,7 +50,7 @@ let products = [
   { name: "水", price: 100, img: "https://img.icons8.com/color/96/water-bottle.png" }
 ];
 
-// 商品カード描画
+// 商品描画
 function renderProducts() {
   const container = document.getElementById("productList");
   container.innerHTML = "";
@@ -116,7 +116,7 @@ async function initLiff() {
   }
 }
 
-// 注文確定
+// 注文確定（CORS対応）
 async function submitOrder(){
   const buyerName = document.getElementById("buyerName").value.trim();
   if(!buyerName){ alert("注文者名を入力してください"); return; }
@@ -131,7 +131,8 @@ async function submitOrder(){
       {
         method: "POST",
         body: JSON.stringify(orderData),
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        mode: "cors" // ←必須: GitHub Pages など外部サイトからのアクセスを許可
       }
     );
     const result = await response.json();
