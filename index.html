@@ -111,8 +111,8 @@
   </div>
 
   <script>
-    const liffId = "2008097125-Ve0dXDGE"; // ← LINE Developersで発行されたLIFF ID
-    const gasUrl = "1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs"; // ← GASのWebアプリ公開URL
+    const liffId = "2008097125-Ve0dXDGE"; // あなたのLIFF ID
+    const gasUrl = "1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs"; // あなたのGAS WebアプリURLに置き換える
 
     let cart = [];
 
@@ -143,7 +143,7 @@
       totalEl.textContent = `合計: ${total}円`;
     }
 
-    // 注文をGASに送信
+    // 注文を送信
     function submitOrder() {
       if (cart.length === 0) {
         alert("カートが空です");
@@ -157,7 +157,7 @@
 
       const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
       const order = {
-        customer: name,
+        customer: name, // 手入力した注文者の名前
         items: cart,
         total: total,
         orderDate: new Date().toISOString()
@@ -188,7 +188,7 @@
       } else {
         const profile = await liff.getProfile();
         document.getElementById("userInfo").innerHTML =
-          `<p>ようこそ ${profile.displayName} さん</p>`;
+          `<p>LINEログイン中: ${profile.displayName} さん</p>`;
       }
     }
     main();
