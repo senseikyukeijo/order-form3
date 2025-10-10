@@ -1,28 +1,29 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>先生ミニショップ</title>
-  <style>
-    body { font-family: "Segoe UI", background: #f9fafb; margin:0; padding:20px; }
-    h1 { text-align:center; color:#333; }
-    .card { background:#fff; border-radius:12px; padding:15px; margin:15px auto; max-width:420px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-    input, button, select { width:100%; padding:10px; margin-top:8px; border:1px solid #ccc; border-radius:6px; font-size:16px; }
-    button { background-color:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
-    button:hover { background-color:#45a049; }
-    table { width:100%; border-collapse:collapse; margin-top:15px; }
-    th, td { border-bottom:1px solid #ddd; padding:8px; text-align:center; }
-    .total { font-weight:bold; text-align:right; margin-top:10px; font-size:18px; }
-    .success { color:green; text-align:center; margin-top:10px; }
-    .error { color:red; text-align:center; margin-top:10px; }
-  </style>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>先生ミニショップ</title>
+<style>
+  body { font-family: "Segoe UI", background: #f9fafb; margin:0; padding:20px; }
+  h1 { text-align:center; color:#333; }
+  .card { background:#fff; border-radius:12px; padding:15px; margin:15px auto; max-width:480px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+  input, button, select { width:100%; padding:10px; margin-top:8px; border:1px solid #ccc; border-radius:6px; font-size:16px; }
+  button { background-color:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
+  button:hover { background-color:#45a049; }
+  table { width:100%; border-collapse:collapse; margin-top:15px; }
+  th, td { border-bottom:1px solid #ddd; padding:8px; text-align:center; }
+  .total { font-weight:bold; text-align:right; margin-top:10px; font-size:18px; }
+  .success { color:green; text-align:center; margin-top:10px; }
+  .error { color:red; text-align:center; margin-top:10px; }
+</style>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
 <h1>先生ミニショップ</h1>
+
 <div class="card">
-  <label>商品名：</label>
+  <label>商品選択：</label>
   <select id="item">
     <option value="ノート">ノート（100円）</option>
     <option value="ペン">ペン（150円）</option>
@@ -45,22 +46,30 @@
   <div class="total" id="totalAmount">合計金額: 0円</div>
 
   <label>注文者名：</label>
-  <input type="text" id="name" placeholder="名前を入力してください" />
+  <input type="text" id="buyerName" placeholder="名前を入力してください" />
 
   <button id="orderButton">注文を確定</button>
   <p id="message"></p>
 </div>
 
 <script>
-const LIFF_ID = "2008201630-dvJg4lYw"; // LIFF IDを入力
-const GAS_URL = "https://script.google.com/a/macros/ict.shimanet.ed.jp/s/AKfycbxsBJEjmHZKDFTXrjyr7IRZex_Y0qK3k3o3gf64GMQRdZQHES3RT6MfRb7YzygZGFPU/exec"; // Apps Script URLを入力
+const LIFF_ID = "2008201630-dvJg4lYw"; // LIFF ID
+const GAS_URL = "https://script.google.com/a/macros/ict.shimanet.ed.jp/s/AKfycbzqQYLWhTSldyvSjW6-H1_khSWASYvuaIsBgLaelav9Br3UD-Ptq8jWLvn_0i6zuuze/exec"; // Apps Script WebアプリURL
 const ITEM_PRICE = { "ノート":100, "ペン":150, "ファイル":200, "消しゴム":80 };
 
 let cart = [];
 
+// LIFF初期化
 async function initializeLiff() {
-  try { await liff.init({ liffId: LIFF_ID }); if(!liff.isLoggedIn()) liff.login(); } 
-  catch(e) { console.error("LIFF初期化エラー:", e); }
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if(liff.isLoggedIn()){
+      const profile = await liff.getProfile();
+      document.getElementById("buyerName").value = profile.displayName; // LIFFログイン名を初期表示
+    } else {
+      liff.login();
+    }
+  } catch(e) { console.error("LIFF初期化エラー:", e); }
 }
 
 // カート更新
@@ -80,6 +89,7 @@ function updateCartTable() {
 
 function removeItem(index){ cart.splice(index,1); updateCartTable(); }
 
+// 商品追加
 document.getElementById("addButton").addEventListener("click",()=>{
   const item = document.getElementById("item").value;
   const quantity = parseInt(document.getElementById("quantity").value);
@@ -90,33 +100,37 @@ document.getElementById("addButton").addEventListener("click",()=>{
 
 // 注文確定
 document.getElementById("orderButton").addEventListener("click", async()=>{
-  const name = document.getElementById("name").value.trim();
+  const buyerName = document.getElementById("buyerName").value.trim();
   const messageElement = document.getElementById("message");
-  if(!name){ messageElement.textContent="⚠️ 注文者名を入力してください。"; messageElement.className="error"; return; }
+  if(!buyerName){ messageElement.textContent="⚠️ 注文者名を入力してください。"; messageElement.className="error"; return; }
   if(cart.length===0){ messageElement.textContent="⚠️ カートが空です。"; messageElement.className="error"; return; }
+
   const total = cart.reduce((sum,item)=>sum+ITEM_PRICE[item.name]*item.quantity,0);
-  messageElement.textContent="送信中..."; messageElement.className="";
-  
+  const orderData = { buyerName, items: cart, total };
+
+  messageElement.textContent = "送信中...";
+  messageElement.className = "";
+
   try {
     const response = await fetch(GAS_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ name, cart, total }),
+      body:JSON.stringify(orderData),
       mode:"cors"
     });
     const result = await response.json();
     if(result.status==="success"){
-      messageElement.textContent="✅ 注文が送信されました！";
+      messageElement.textContent="✅ 注文がスプレッドシートに保存されました！";
       messageElement.className="success";
       cart=[];
       updateCartTable();
-      document.getElementById("name").value = "";
+      document.getElementById("buyerName").value = buyerName; // LIFF名は消さない
     } else {
       messageElement.textContent="⚠️ エラー: "+result.message;
       messageElement.className="error";
     }
-  } catch(error){
-    messageElement.textContent="⚠️ 通信エラー: "+error.message;
+  } catch(err){
+    messageElement.textContent="⚠️ 通信エラー: "+err.message;
     messageElement.className="error";
   }
 });
