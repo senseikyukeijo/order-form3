@@ -75,22 +75,33 @@
   </div>
 
   <script>
-    const LIFF_ID = "あなたのLIFF_ID"; // ← あなたのLIFF IDを入れる
-    const GAS_URL = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // ← Apps ScriptのURL
+    // === LIFFとGASの設定 ===
+    const LIFF_ID = "あなたのLIFF_ID"; // あなたのLIFF IDを入力
+    const GAS_URL = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // あなたのApps Script WebアプリURL
 
+    // === LIFF初期化 ===
     async function initializeLiff() {
       try {
         await liff.init({ liffId: LIFF_ID });
+
         if (!liff.isLoggedIn()) {
           liff.login();
-        } else {
-          console.log("LIFFログイン済み");
+          return;
         }
+
+        // ログイン済みならプロフィール取得して、名前欄に自動入力（上書きしない）
+        const profile = await liff.getProfile();
+        const nameField = document.getElementById("name");
+        if (!nameField.value) {
+          nameField.value = profile.displayName || "";
+        }
+
       } catch (error) {
         console.error("LIFF初期化エラー:", error);
       }
     }
 
+    // === 注文送信処理 ===
     document.getElementById("orderButton").addEventListener("click", async () => {
       const item = document.getElementById("item").value;
       const quantity = document.getElementById("quantity").value;
@@ -109,16 +120,18 @@
       try {
         const response = await fetch(GAS_URL, {
           method: "POST",
+          mode: "cors", // ← CORS対応
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ item, quantity, name })
         });
 
         const result = await response.json();
-        if (result.status === "success") {
+        if (result.status === "success" || result.result === "success") {
           messageElement.textContent = "✅ 注文が送信されました！";
           messageElement.className = "success";
+          document.getElementById("quantity").value = 1;
         } else {
-          messageElement.textContent = "⚠️ エラー: " + result.message;
+          messageElement.textContent = "⚠️ エラー: " + (result.message || "不明なエラー");
           messageElement.className = "error";
         }
       } catch (error) {
@@ -127,7 +140,8 @@
       }
     });
 
-    initializeLiff();
+    // === ページ読み込み時に実行 ===
+    window.onload = initializeLiff;
   </script>
 </body>
 </html>
