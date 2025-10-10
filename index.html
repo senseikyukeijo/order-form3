@@ -58,10 +58,10 @@
   <div class="card">
     <label>商品名：</label>
     <select id="item">
-      <option value="ノート">ノート</option>
-      <option value="ペン">ペン</option>
-      <option value="ファイル">ファイル</option>
-      <option value="消しゴム">消しゴム</option>
+      <option value="ノート">ノート（100円）</option>
+      <option value="ペン">ペン（150円）</option>
+      <option value="ファイル">ファイル（200円）</option>
+      <option value="消しゴム">消しゴム（80円）</option>
     </select>
 
     <label>数量：</label>
@@ -75,36 +75,30 @@
   </div>
 
   <script>
-    // === LIFFとGASの設定 ===
-    const LIFF_ID = "あなたのLIFF_ID"; // あなたのLIFF IDを入力
-    const GAS_URL = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // あなたのApps Script WebアプリURL
+    const LIFF_ID = "あなたのLIFF_ID"; // ← LIFFのID
+    const GAS_URL = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // ← Apps ScriptのURL
 
-    // === LIFF初期化 ===
+    const ITEM_PRICE = {
+      "ノート": 100,
+      "ペン": 150,
+      "ファイル": 200,
+      "消しゴム": 80
+    };
+
     async function initializeLiff() {
       try {
         await liff.init({ liffId: LIFF_ID });
-
         if (!liff.isLoggedIn()) {
           liff.login();
-          return;
         }
-
-        // ログイン済みならプロフィール取得して、名前欄に自動入力（上書きしない）
-        const profile = await liff.getProfile();
-        const nameField = document.getElementById("name");
-        if (!nameField.value) {
-          nameField.value = profile.displayName || "";
-        }
-
       } catch (error) {
         console.error("LIFF初期化エラー:", error);
       }
     }
 
-    // === 注文送信処理 ===
     document.getElementById("orderButton").addEventListener("click", async () => {
       const item = document.getElementById("item").value;
-      const quantity = document.getElementById("quantity").value;
+      const quantity = parseInt(document.getElementById("quantity").value);
       const name = document.getElementById("name").value.trim();
       const messageElement = document.getElementById("message");
 
@@ -114,24 +108,32 @@
         return;
       }
 
+      const subtotal = ITEM_PRICE[item] * quantity;
+      const total = subtotal; // 今後複数注文対応する場合は合計に加算
+
       messageElement.textContent = "送信中...";
       messageElement.className = "";
 
       try {
         const response = await fetch(GAS_URL, {
           method: "POST",
-          mode: "cors", // ← CORS対応
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ item, quantity, name })
+          body: JSON.stringify({
+            name,
+            item,
+            quantity,
+            subtotal,
+            total
+          }),
+          mode: "cors"
         });
 
         const result = await response.json();
-        if (result.status === "success" || result.result === "success") {
+        if (result.status === "success") {
           messageElement.textContent = "✅ 注文が送信されました！";
           messageElement.className = "success";
-          document.getElementById("quantity").value = 1;
         } else {
-          messageElement.textContent = "⚠️ エラー: " + (result.message || "不明なエラー");
+          messageElement.textContent = "⚠️ エラー: " + result.message;
           messageElement.className = "error";
         }
       } catch (error) {
@@ -140,8 +142,7 @@
       }
     });
 
-    // === ページ読み込み時に実行 ===
-    window.onload = initializeLiff;
+    initializeLiff();
   </script>
 </body>
 </html>
