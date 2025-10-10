@@ -7,6 +7,22 @@
 <style>
   body { font-family: "Segoe UI", sans-serif; background: #f7f9fc; margin: 0; padding: 20px; }
   h1 { text-align: center; color: #333; }
+  .buyer-input {
+    text-align: center;
+    margin: 10px auto 20px auto;
+    background: #fff;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    max-width: 400px;
+  }
+  .buyer-input input {
+    width: 80%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+  }
   .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
   .card { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; }
   .card img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
@@ -16,7 +32,6 @@
   #cart table { width: 100%; border-collapse: collapse; }
   #cart th, #cart td { padding: 8px; border-bottom: 1px solid #ddd; text-align: center; }
   #total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 10px; }
-  #buyerName { padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
   button.confirm { background: #2196F3; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; }
   button.confirm:hover { background: #0b7dda; }
 </style>
@@ -25,13 +40,18 @@
 <body>
 <h1>先生ミニショップ</h1>
 
-<!-- 商品一覧 -->
+<!-- 🔹 注文者名入力欄 -->
+<div class="buyer-input">
+  <label for="buyerName">🧑‍💼 注文者名：</label><br>
+  <input type="text" id="buyerName" placeholder="お名前を入力してください">
+</div>
+
+<!-- 🔹 商品一覧 -->
 <div class="products" id="productList"></div>
 
-<!-- カート -->
+<!-- 🔹 カート -->
 <div id="cart">
   <h2>🛒 注文カート</h2>
-  <p>注文者名: <input type="text" id="buyerName" placeholder="名前を入力してください"></p>
   <table id="cartTable">
     <thead>
       <tr><th>商品</th><th>数量</th><th>価格</th><th>小計</th><th>削除</th></tr>
@@ -108,7 +128,7 @@ function renderCart() {
   document.getElementById("total").innerText = "合計: " + total + "円";
 }
 
-// LIFF初期化
+// LIFF初期化（必要な場合）
 async function initLiff() {
   try {
     await liff.init({ liffId: "2008201630-dvJg4lYw" });
