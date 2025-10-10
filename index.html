@@ -5,53 +5,95 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>先生ミニショップ</title>
 <style>
-  body { font-family: "Segoe UI", sans-serif; background: #f7f9fc; margin: 0; padding: 20px; }
-  h1 { text-align: center; color: #333; }
-  .buyer-input {
+  body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f7f9fc;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
     text-align: center;
-    margin: 10px auto 20px auto;
+    color: #333;
+  }
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+  .card {
     background: #fff;
-    padding: 10px;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  .card img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 10px;
+  }
+  .card button {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 5px;
+  }
+  .card button:hover {
+    background: #45a049;
+  }
+  #cart {
+    margin-top: 30px;
+    background: #fff;
+    padding: 15px;
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    max-width: 400px;
   }
-  .buyer-input input {
-    width: 80%;
+  #cart table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #cart th, #cart td {
     padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 16px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
   }
-  .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
-  .card { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; }
-  .card img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
-  .card button { background: #4CAF50; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-top: 5px; }
-  .card button:hover { background: #45a049; }
-  #cart { margin-top: 30px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-  #cart table { width: 100%; border-collapse: collapse; }
-  #cart th, #cart td { padding: 8px; border-bottom: 1px solid #ddd; text-align: center; }
-  #total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 10px; }
-  button.confirm { background: #2196F3; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; }
-  button.confirm:hover { background: #0b7dda; }
+  #total {
+    text-align: right;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  #buyerName {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 60%;
+  }
+  #nameContainer {
+    margin: 10px 0;
+    text-align: center;
+  }
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
 <h1>先生ミニショップ</h1>
 
-<!-- 🔹 注文者名入力欄 -->
-<div class="buyer-input">
-  <label for="buyerName">🧑‍💼 注文者名：</label><br>
-  <input type="text" id="buyerName" placeholder="お名前を入力してください">
-</div>
-
-<!-- 🔹 商品一覧 -->
+<!-- 商品一覧 -->
 <div class="products" id="productList"></div>
 
-<!-- 🔹 カート -->
+<!-- カート -->
 <div id="cart">
   <h2>🛒 注文カート</h2>
+  <div id="nameContainer">
+    <label>注文者名：</label>
+    <input type="text" id="buyerName" placeholder="名前を入力してください">
+  </div>
   <table id="cartTable">
     <thead>
       <tr><th>商品</th><th>数量</th><th>価格</th><th>小計</th><th>削除</th></tr>
@@ -59,7 +101,7 @@
     <tbody></tbody>
   </table>
   <p id="total">合計: 0円</p>
-  <button class="confirm" onclick="submitOrder()">注文を確定する</button>
+  <button onclick="submitOrder()">注文を確定する</button>
 </div>
 
 <script>
@@ -72,7 +114,7 @@ let products = [
   { name: "水", price: 100, img: "https://img.icons8.com/color/96/water-bottle.png" }
 ];
 
-// 商品一覧描画
+// 商品を描画
 function renderProducts() {
   const container = document.getElementById("productList");
   container.innerHTML = "";
@@ -92,7 +134,7 @@ function renderProducts() {
 // カート操作
 function addToCart(name, price) {
   const item = cart.find(i => i.name === name);
-  if (item) item.qty++;
+  if(item) item.qty++;
   else cart.push({ name, price, qty: 1 });
   renderCart();
 }
@@ -104,7 +146,7 @@ function removeFromCart(name) {
 
 function updateQty(name, qty) {
   const item = cart.find(i => i.name === name);
-  if (item) item.qty = qty > 0 ? parseInt(qty, 10) : 1;
+  if(item) item.qty = qty > 0 ? parseInt(qty, 10) : 1;
   renderCart();
 }
 
@@ -128,21 +170,29 @@ function renderCart() {
   document.getElementById("total").innerText = "合計: " + total + "円";
 }
 
-// LIFF初期化（必要な場合）
+// LIFF初期化
 async function initLiff() {
   try {
-    await liff.init({ liffId: "2008201630-dvJg4lYw" });
-    if (!liff.isLoggedIn()) liff.login();
+    await liff.init({ liffId: "2008201630-dvJg4lYw" }); // あなたのLIFF ID
+    if(!liff.isLoggedIn()) {
+      liff.login();
+    } else {
+      const profile = await liff.getProfile();
+      console.log("LINEユーザー:", profile.displayName);
+      // ログインしても名前欄は残す（自動で入力はしても消さない）
+      const buyerNameInput = document.getElementById("buyerName");
+      if (!buyerNameInput.value) buyerNameInput.value = profile.displayName || "";
+    }
   } catch (e) {
     console.log("LIFF初期化エラー:", e);
   }
 }
 
 // 注文送信
-async function submitOrder() {
+async function submitOrder(){
   const buyerName = document.getElementById("buyerName").value.trim();
-  if (!buyerName) { alert("注文者名を入力してください"); return; }
-  if (cart.length === 0) { alert("カートが空です"); return; }
+  if(!buyerName){ alert("注文者名を入力してください"); return; }
+  if(cart.length===0){ alert("カートが空です"); return; }
 
   const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
   const orderData = { buyerName, items: cart, total };
@@ -153,13 +203,11 @@ async function submitOrder() {
       {
         method: "POST",
         body: JSON.stringify(orderData),
-        headers: { "Content-Type": "application/json" },
-        mode: "cors"
+        headers: { "Content-Type": "application/json" }
       }
     );
-
     const result = await response.json();
-    if (result.result === "success") {
+    if(result.result === "success"){
       alert("注文が確定しました！");
       cart = [];
       renderCart();
@@ -167,7 +215,7 @@ async function submitOrder() {
     } else {
       alert("エラー: " + result.message);
     }
-  } catch (err) {
+  } catch(err){
     alert("通信エラー: " + err);
   }
 }
