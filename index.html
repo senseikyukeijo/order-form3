@@ -17,6 +17,8 @@
   #cart th, #cart td { padding: 8px; border-bottom: 1px solid #ddd; text-align: center; }
   #total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 10px; }
   #buyerName { padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+  button.confirm { background: #2196F3; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+  button.confirm:hover { background: #0b7dda; }
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
@@ -37,7 +39,7 @@
     <tbody></tbody>
   </table>
   <p id="total">合計: 0円</p>
-  <button onclick="submitOrder()">注文を確定する</button>
+  <button class="confirm" onclick="submitOrder()">注文を確定する</button>
 </div>
 
 <script>
@@ -50,7 +52,7 @@ let products = [
   { name: "水", price: 100, img: "https://img.icons8.com/color/96/water-bottle.png" }
 ];
 
-// 商品描画
+// 商品一覧描画
 function renderProducts() {
   const container = document.getElementById("productList");
   container.innerHTML = "";
@@ -70,7 +72,7 @@ function renderProducts() {
 // カート操作
 function addToCart(name, price) {
   const item = cart.find(i => i.name === name);
-  if(item) item.qty++;
+  if (item) item.qty++;
   else cart.push({ name, price, qty: 1 });
   renderCart();
 }
@@ -82,7 +84,7 @@ function removeFromCart(name) {
 
 function updateQty(name, qty) {
   const item = cart.find(i => i.name === name);
-  if(item) item.qty = qty > 0 ? parseInt(qty,10) : 1;
+  if (item) item.qty = qty > 0 ? parseInt(qty, 10) : 1;
   renderCart();
 }
 
@@ -106,45 +108,47 @@ function renderCart() {
   document.getElementById("total").innerText = "合計: " + total + "円";
 }
 
-// LIFF初期化（必要なら）
+// LIFF初期化
 async function initLiff() {
   try {
-    await liff.init({ liffId: "2008201630-dvJg4lYw" }); // 必要に応じてLIFF IDを設定
-    if(!liff.isLoggedIn()) liff.login();
-  } catch(e) {
+    await liff.init({ liffId: "2008201630-dvJg4lYw" });
+    if (!liff.isLoggedIn()) liff.login();
+  } catch (e) {
     console.log("LIFF初期化エラー:", e);
   }
 }
 
-// 注文確定（CORS対応）
-async function submitOrder(){
+// 注文送信
+async function submitOrder() {
   const buyerName = document.getElementById("buyerName").value.trim();
-  if(!buyerName){ alert("注文者名を入力してください"); return; }
-  if(cart.length===0){ alert("カートが空です"); return; }
+  if (!buyerName) { alert("注文者名を入力してください"); return; }
+  if (cart.length === 0) { alert("カートが空です"); return; }
 
-  const total = cart.reduce((sum,i)=>sum+i.price*i.qty,0);
+  const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
   const orderData = { buyerName, items: cart, total };
 
-  try{
+  try {
     const response = await fetch(
       "https://script.google.com/macros/s/1PgcwEuwuoMHLwq6snXg_CiFvw0bvhpsKffCq6rj5BZs/exec",
       {
         method: "POST",
         body: JSON.stringify(orderData),
         headers: { "Content-Type": "application/json" },
-        mode: "cors" // ←必須: GitHub Pages など外部サイトからのアクセスを許可
+        mode: "cors"
       }
     );
+
     const result = await response.json();
-    if(result.result==="success"){
+    if (result.result === "success") {
       alert("注文が確定しました！");
-      cart=[];
+      cart = [];
       renderCart();
+      document.getElementById("buyerName").value = "";
     } else {
-      alert("エラー: "+result.message);
+      alert("エラー: " + result.message);
     }
-  } catch(err){
-    alert("通信エラー: "+err);
+  } catch (err) {
+    alert("通信エラー: " + err);
   }
 }
 
