@@ -5,215 +5,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>先生ミニショップ</title>
   <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #f9fafb;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      margin: 15px auto;
-      max-width: 420px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    input, button, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 16px;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      border-bottom: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-    .total {
-      font-weight: bold;
-      text-align: right;
-      margin-top: 10px;
-      font-size: 18px;
-    }
-    .success {
-      color: green;
-      text-align: center;
-      margin-top: 10px;
-    }
-    .error {
-      color: red;
-      text-align: center;
-      margin-top: 10px;
-    }
+    body { font-family: "Segoe UI", background: #f9fafb; margin:0; padding:20px; }
+    h1 { text-align:center; color:#333; }
+    .card { background:#fff; border-radius:12px; padding:15px; margin:15px auto; max-width:420px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    input, button, select { width:100%; padding:10px; margin-top:8px; border:1px solid #ccc; border-radius:6px; font-size:16px; }
+    button { background-color:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
+    button:hover { background-color:#45a049; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    th, td { border-bottom:1px solid #ddd; padding:8px; text-align:center; }
+    .total { font-weight:bold; text-align:right; margin-top:10px; font-size:18px; }
+    .success { color:green; text-align:center; margin-top:10px; }
+    .error { color:red; text-align:center; margin-top:10px; }
   </style>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <h1>先生ミニショップ</h1>
-  <div class="card">
-    <label>商品名：</label>
-    <select id="item">
-      <option value="ノート">ノート（100円）</option>
-      <option value="ペン">ペン（150円）</option>
-      <option value="ファイル">ファイル（200円）</option>
-      <option value="消しゴム">消しゴム（80円）</option>
-    </select>
+<h1>先生ミニショップ</h1>
+<div class="card">
+  <label>商品名：</label>
+  <select id="item">
+    <option value="ノート">ノート（100円）</option>
+    <option value="ペン">ペン（150円）</option>
+    <option value="ファイル">ファイル（200円）</option>
+    <option value="消しゴム">消しゴム（80円）</option>
+  </select>
 
-    <label>数量：</label>
-    <input type="number" id="quantity" min="1" value="1" />
+  <label>数量：</label>
+  <input type="number" id="quantity" min="1" value="1" />
 
-    <button id="addButton">カートに追加</button>
+  <button id="addButton">カートに追加</button>
 
-    <table id="cartTable">
-      <thead>
-        <tr>
-          <th>商品名</th>
-          <th>数量</th>
-          <th>小計</th>
-          <th>削除</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <table id="cartTable">
+    <thead>
+      <tr><th>商品名</th><th>数量</th><th>小計</th><th>削除</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-    <div class="total" id="totalAmount">合計金額: 0円</div>
+  <div class="total" id="totalAmount">合計金額: 0円</div>
 
-    <label>注文者名：</label>
-    <input type="text" id="name" placeholder="名前を入力してください" />
+  <label>注文者名：</label>
+  <input type="text" id="name" placeholder="名前を入力してください" />
 
-    <button id="orderButton">注文を確定</button>
-    <p id="message"></p>
-  </div>
+  <button id="orderButton">注文を確定</button>
+  <p id="message"></p>
+</div>
 
-  <script>
-    const LIFF_ID = "あなたのLIFF_ID"; // ← LIFF IDを入力
-    const GAS_URL = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // ← Apps Script URLを入力
+<script>
+const LIFF_ID = "あなたのLIFF_ID"; // LIFF IDを入力
+const GAS_URL = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // Apps Script URLを入力
+const ITEM_PRICE = { "ノート":100, "ペン":150, "ファイル":200, "消しゴム":80 };
 
-    const ITEM_PRICE = {
-      "ノート": 100,
-      "ペン": 150,
-      "ファイル": 200,
-      "消しゴム": 80
-    };
+let cart = [];
 
-    let cart = [];
+async function initializeLiff() {
+  try { await liff.init({ liffId: LIFF_ID }); if(!liff.isLoggedIn()) liff.login(); } 
+  catch(e) { console.error("LIFF初期化エラー:", e); }
+}
 
-    async function initializeLiff() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
-        if (!liff.isLoggedIn()) liff.login();
-      } catch (error) {
-        console.error("LIFF初期化エラー:", error);
-      }
-    }
+// カート更新
+function updateCartTable() {
+  const tbody = document.querySelector("#cartTable tbody");
+  tbody.innerHTML = "";
+  let total = 0;
+  cart.forEach((item,index)=>{
+    const subtotal = ITEM_PRICE[item.name]*item.quantity;
+    total += subtotal;
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${item.name}</td><td>${item.quantity}</td><td>${subtotal}円</td><td><button onclick="removeItem(${index})">×</button></td>`;
+    tbody.appendChild(row);
+  });
+  document.getElementById("totalAmount").textContent = `合計金額: ${total}円`;
+}
 
-    function updateCartTable() {
-      const tbody = document.querySelector("#cartTable tbody");
-      tbody.innerHTML = "";
-      let total = 0;
+function removeItem(index){ cart.splice(index,1); updateCartTable(); }
 
-      cart.forEach((item, index) => {
-        const row = document.createElement("tr");
-        const subtotal = ITEM_PRICE[item.name] * item.quantity;
-        total += subtotal;
+document.getElementById("addButton").addEventListener("click",()=>{
+  const item = document.getElementById("item").value;
+  const quantity = parseInt(document.getElementById("quantity").value);
+  if(quantity<1) return alert("数量は1以上を入力してください。");
+  cart.push({name:item, quantity});
+  updateCartTable();
+});
 
-        row.innerHTML = `
-          <td>${item.name}</td>
-          <td>${item.quantity}</td>
-          <td>${subtotal}円</td>
-          <td><button onclick="removeItem(${index})">×</button></td>
-        `;
-        tbody.appendChild(row);
-      });
-
-      document.getElementById("totalAmount").textContent = `合計金額: ${total}円`;
-    }
-
-    function removeItem(index) {
-      cart.splice(index, 1);
-      updateCartTable();
-    }
-
-    document.getElementById("addButton").addEventListener("click", () => {
-      const item = document.getElementById("item").value;
-      const quantity = parseInt(document.getElementById("quantity").value);
-
-      if (quantity < 1) return alert("数量は1以上を入力してください。");
-
-      cart.push({ name: item, quantity });
-      updateCartTable();
+// 注文確定
+document.getElementById("orderButton").addEventListener("click", async()=>{
+  const name = document.getElementById("name").value.trim();
+  const messageElement = document.getElementById("message");
+  if(!name){ messageElement.textContent="⚠️ 注文者名を入力してください。"; messageElement.className="error"; return; }
+  if(cart.length===0){ messageElement.textContent="⚠️ カートが空です。"; messageElement.className="error"; return; }
+  const total = cart.reduce((sum,item)=>sum+ITEM_PRICE[item.name]*item.quantity,0);
+  messageElement.textContent="送信中..."; messageElement.className="";
+  
+  try {
+    const response = await fetch(GAS_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ name, cart, total }),
+      mode:"cors"
     });
+    const result = await response.json();
+    if(result.status==="success"){
+      messageElement.textContent="✅ 注文が送信されました！";
+      messageElement.className="success";
+      cart=[];
+      updateCartTable();
+      document.getElementById("name").value = "";
+    } else {
+      messageElement.textContent="⚠️ エラー: "+result.message;
+      messageElement.className="error";
+    }
+  } catch(error){
+    messageElement.textContent="⚠️ 通信エラー: "+error.message;
+    messageElement.className="error";
+  }
+});
 
-    document.getElementById("orderButton").addEventListener("click", async () => {
-      const name = document.getElementById("name").value.trim();
-      const messageElement = document.getElementById("message");
-
-      if (!name) {
-        messageElement.textContent = "⚠️ 注文者名を入力してください。";
-        messageElement.className = "error";
-        return;
-      }
-      if (cart.length === 0) {
-        messageElement.textContent = "⚠️ カートが空です。";
-        messageElement.className = "error";
-        return;
-      }
-
-      const total = cart.reduce((sum, item) => sum + ITEM_PRICE[item.name] * item.quantity, 0);
-
-      messageElement.textContent = "送信中...";
-      messageElement.className = "";
-
-      try {
-        const response = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            cart,
-            total
-          }),
-          mode: "cors"
-        });
-
-        const result = await response.json();
-        if (result.status === "success") {
-          messageElement.textContent = "✅ 注文が送信されました！";
-          messageElement.className = "success";
-          cart = [];
-          updateCartTable();
-        } else {
-          messageElement.textContent = "⚠️ エラー: " + result.message;
-          messageElement.className = "error";
-        }
-      } catch (error) {
-        messageElement.textContent = "⚠️ 通信エラー: " + error.message;
-        messageElement.className = "error";
-      }
-    });
-
-    initializeLiff();
-  </script>
+initializeLiff();
+</script>
 </body>
 </html>
