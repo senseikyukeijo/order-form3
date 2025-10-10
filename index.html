@@ -20,7 +20,7 @@
       border-radius: 12px;
       padding: 15px;
       margin: 15px auto;
-      max-width: 400px;
+      max-width: 420px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     input, button, select {
@@ -39,6 +39,22 @@
     }
     button:hover {
       background-color: #45a049;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    .total {
+      font-weight: bold;
+      text-align: right;
+      margin-top: 10px;
+      font-size: 18px;
     }
     .success {
       color: green;
@@ -67,6 +83,22 @@
     <label>数量：</label>
     <input type="number" id="quantity" min="1" value="1" />
 
+    <button id="addButton">カートに追加</button>
+
+    <table id="cartTable">
+      <thead>
+        <tr>
+          <th>商品名</th>
+          <th>数量</th>
+          <th>小計</th>
+          <th>削除</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="total" id="totalAmount">合計金額: 0円</div>
+
     <label>注文者名：</label>
     <input type="text" id="name" placeholder="名前を入力してください" />
 
@@ -75,8 +107,8 @@
   </div>
 
   <script>
-    const LIFF_ID = "あなたのLIFF_ID"; // ← LIFFのID
-    const GAS_URL = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // ← Apps ScriptのURL
+    const LIFF_ID = "あなたのLIFF_ID"; // ← LIFF IDを入力
+    const GAS_URL = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // ← Apps Script URLを入力
 
     const ITEM_PRICE = {
       "ノート": 100,
@@ -85,20 +117,55 @@
       "消しゴム": 80
     };
 
+    let cart = [];
+
     async function initializeLiff() {
       try {
         await liff.init({ liffId: LIFF_ID });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        }
+        if (!liff.isLoggedIn()) liff.login();
       } catch (error) {
         console.error("LIFF初期化エラー:", error);
       }
     }
 
-    document.getElementById("orderButton").addEventListener("click", async () => {
+    function updateCartTable() {
+      const tbody = document.querySelector("#cartTable tbody");
+      tbody.innerHTML = "";
+      let total = 0;
+
+      cart.forEach((item, index) => {
+        const row = document.createElement("tr");
+        const subtotal = ITEM_PRICE[item.name] * item.quantity;
+        total += subtotal;
+
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.quantity}</td>
+          <td>${subtotal}円</td>
+          <td><button onclick="removeItem(${index})">×</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("totalAmount").textContent = `合計金額: ${total}円`;
+    }
+
+    function removeItem(index) {
+      cart.splice(index, 1);
+      updateCartTable();
+    }
+
+    document.getElementById("addButton").addEventListener("click", () => {
       const item = document.getElementById("item").value;
       const quantity = parseInt(document.getElementById("quantity").value);
+
+      if (quantity < 1) return alert("数量は1以上を入力してください。");
+
+      cart.push({ name: item, quantity });
+      updateCartTable();
+    });
+
+    document.getElementById("orderButton").addEventListener("click", async () => {
       const name = document.getElementById("name").value.trim();
       const messageElement = document.getElementById("message");
 
@@ -107,9 +174,13 @@
         messageElement.className = "error";
         return;
       }
+      if (cart.length === 0) {
+        messageElement.textContent = "⚠️ カートが空です。";
+        messageElement.className = "error";
+        return;
+      }
 
-      const subtotal = ITEM_PRICE[item] * quantity;
-      const total = subtotal; // 今後複数注文対応する場合は合計に加算
+      const total = cart.reduce((sum, item) => sum + ITEM_PRICE[item.name] * item.quantity, 0);
 
       messageElement.textContent = "送信中...";
       messageElement.className = "";
@@ -120,9 +191,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name,
-            item,
-            quantity,
-            subtotal,
+            cart,
             total
           }),
           mode: "cors"
@@ -132,6 +201,8 @@
         if (result.status === "success") {
           messageElement.textContent = "✅ 注文が送信されました！";
           messageElement.className = "success";
+          cart = [];
+          updateCartTable();
         } else {
           messageElement.textContent = "⚠️ エラー: " + result.message;
           messageElement.className = "error";
