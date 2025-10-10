@@ -69,13 +69,13 @@
     margin-top: 10px;
   }
   #buyerName {
-    padding: 5px;
+    padding: 6px;
     border-radius: 5px;
     border: 1px solid #ccc;
-    width: 60%;
+    width: 70%;
   }
   #nameContainer {
-    margin: 10px 0;
+    margin: 15px 0;
     text-align: center;
   }
 </style>
@@ -90,16 +90,20 @@
 <!-- カート -->
 <div id="cart">
   <h2>🛒 注文カート</h2>
+  
+  <!-- ✅ 常に見える名前入力欄 -->
   <div id="nameContainer">
-    <label>注文者名：</label>
-    <input type="text" id="buyerName" placeholder="名前を入力してください">
+    <label for="buyerName">注文者名：</label><br>
+    <input type="text" id="buyerName" placeholder="ここに名前を入力してください">
   </div>
+
   <table id="cartTable">
     <thead>
       <tr><th>商品</th><th>数量</th><th>価格</th><th>小計</th><th>削除</th></tr>
     </thead>
     <tbody></tbody>
   </table>
+
   <p id="total">合計: 0円</p>
   <button onclick="submitOrder()">注文を確定する</button>
 </div>
@@ -114,7 +118,7 @@ let products = [
   { name: "水", price: 100, img: "https://img.icons8.com/color/96/water-bottle.png" }
 ];
 
-// 商品を描画
+// 商品リスト描画
 function renderProducts() {
   const container = document.getElementById("productList");
   container.innerHTML = "";
@@ -173,13 +177,13 @@ function renderCart() {
 // LIFF初期化
 async function initLiff() {
   try {
-    await liff.init({ liffId: "2008201630-dvJg4lYw" }); // あなたのLIFF ID
+    await liff.init({ liffId: "2008201630-dvJg4lYw" }); // ←あなたのLIFF ID
     if(!liff.isLoggedIn()) {
       liff.login();
     } else {
       const profile = await liff.getProfile();
       console.log("LINEユーザー:", profile.displayName);
-      // ログインしても名前欄は残す（自動で入力はしても消さない）
+      // LINE名を入力欄に自動反映（ただし削除・上書き可能）
       const buyerNameInput = document.getElementById("buyerName");
       if (!buyerNameInput.value) buyerNameInput.value = profile.displayName || "";
     }
